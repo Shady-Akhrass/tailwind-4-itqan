@@ -1,0 +1,18 @@
+/* src/fonts.css */
+@font-face {
+    font-family: 'Tajawal';
+    src: url('/fonts/Tajawal-Regular.ttf') format('ttf'),
+         url('/fonts/Tajawal-Regular.ttf') format('ttf');
+    font-weight: 400;
+    font-style: normal;
+  }
+  
+  @font-face {
+    font-family: 'Tajawal';
+    src: url('/fonts/Tajawal-Bold.ttf') format('ttf'),
+         url('/fonts/Tajawal-Bold.ttf') format('ttf');
+    font-weight: 700;
+    font-style: normal;
+  }
+
+/* Add more @font-face rules as needed for other font weights and styles */

@@ -1,0 +1,316 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('/src/assets/fonts/Tajawal-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+
+  html,
+  body {
+    @apply overflow-x-hidden max-w-[100vw];
+  }
+
+  body {
+    @apply bg-gradient-to-b from-white to-green-50 min-h-screen relative flex flex-col text-gray-800;
+    font-family: 'Tajawal', sans-serif;
+  }
+
+  .dark body {
+    @apply bg-gradient-to-b from-gray-900 to-gray-800 text-gray-100;
+  }
+
+  body::before,
+  body::after {
+    content: '';
+    @apply absolute rounded-full filter blur-3xl opacity-20 pointer-events-none;
+    z-index: 0;
+  }
+
+  body::before {
+    @apply top-0 left-0 w-72 h-72 bg-green-300;
+    transform: translate(-50%, -50%);
+  }
+
+  body::after {
+    @apply fixed bottom-0 right-0 w-96 h-96 bg-yellow-200;
+    transform: translate(25%, 25%);
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  .dark body::before {
+    @apply bg-yellow-600/30;
+  }
+
+  .dark body::after {
+    @apply bg-yellow-600/30;
+  }
+
+  /* Card styles */
+  .card {
+    @apply bg-white rounded-lg shadow-md transition-all duration-300;
+  }
+
+  .dark .card {
+    @apply bg-gray-800 border border-yellow-400/20 text-gray-100;
+  }
+
+  /* Dark mode background overrides */
+  .dark .bg-white {
+    @apply bg-gray-800;
+  }
+
+  /* Text color overrides */
+  .dark .text-gray-800 {
+    @apply text-gray-50;
+  }
+
+  .dark .text-gray-600 {
+    @apply text-gray-200;
+  }
+
+  .dark .text-gray-900 {
+    @apply text-white;
+  }
+
+  /* Heading styles */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply text-gray-900;
+  }
+
+  .dark h1,
+  .dark h2,
+  .dark h3,
+  .dark h4,
+  .dark h5,
+  .dark h6 {
+    @apply text-white;
+  }
+
+  /* Logo Styles */
+  /* .logo {
+    @apply relative rounded-full transition-all duration-300;
+    background: linear-gradient(135deg, #fefeb8 0%, #e6f5d0 100%);
+  } */
+
+  .dark .logo {
+    background: linear-gradient(135deg, #fef9c380 0%, #dcfce700 100%);
+    @apply opacity-100;
+  }
+
+  .logo:hover {
+    @apply shadow-md;
+    transform: scale(1.02);
+  }
+
+  /* Footer styles */
+  footer {
+    @apply text-white;
+  }
+
+  .dark .bg-emerald-900 {
+    @apply bg-gray-900 border-t border-yellow-400/30;
+  }
+
+  .dark .text-emerald-100 {
+    @apply text-gray-50;
+  }
+
+  .dark .text-emerald-200 {
+    @apply text-gray-200;
+  }
+
+  .dark .border-emerald-800 {
+    @apply border-yellow-400/40;
+  }
+
+  /* Footer shine effect */
+  .dark footer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dark footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(120deg,
+        transparent,
+        rgba(250, 204, 21, 0.15),
+        transparent);
+    animation: shine 3s infinite;
+  }
+
+  @keyframes shine {
+    0% {
+      left: -100%;
+    }
+
+    50% {
+      left: 100%;
+    }
+
+    100% {
+      left: 100%;
+    }
+  }
+
+  /* Button color overrides for light mode */
+  .bg-green-600 {
+    @apply bg-yellow-600;
+  }
+
+  .hover\:bg-green-700:hover {
+    @apply hover:bg-yellow-700;
+  }
+
+  .hover\:text-green-600:hover {
+    @apply hover:text-yellow-600;
+  }
+
+  .text-green-600 {
+    @apply text-yellow-600;
+  }
+
+  /* Title text color in light mode */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply text-white;
+  }
+
+  /* Dark mode overrides remain unchanged */
+  .dark .bg-green-500,
+  .dark .bg-green-600,
+  .dark .bg-green-700 {
+    @apply bg-yellow-400;
+  }
+
+  .dark .hover\:bg-green-700:hover {
+    @apply hover:bg-yellow-400;
+  }
+
+  .dark .hover\:text-green-600:hover {
+    @apply hover:text-yellow-400;
+  }
+
+  .dark .text-green-600 {
+    @apply text-yellow-400;
+  }
+
+  /* Search box styles */
+  .dark .search-box input {
+    box-shadow: 0 0 8px rgba(250, 204, 21, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .dark .search-box input:focus {
+    box-shadow: 0 0 12px rgba(250, 204, 21, 0.4);
+    border-color: rgba(250, 204, 21, 0.5);
+  }
+
+  /* Mission Card Dark Mode Styles */
+  .dark .bg-yellow-100 {
+    @apply bg-yellow-900/30;
+  }
+
+  .dark .from-yellow-600.to-amber-500.bg-clip-text {
+    @apply from-yellow-300 to-yellow-200;
+  }
+
+  .dark .bg-white\/95 {
+    @apply bg-gray-800/95;
+    backdrop-filter: blur(8px);
+  }
+
+  .dark .shadow-lg {
+    @apply shadow-yellow-400/5;
+    box-shadow: 0 4px 20px -2px rgba(250, 204, 21, 0.05);
+  }
+
+  /* Inner container glow effect */
+  .dark .backdrop-blur-sm {
+    @apply bg-gray-800/80;
+    box-shadow: inset 0 0 20px rgba(250, 204, 21, 0.05);
+  }
+
+  /* Content containment rules */
+  section {
+    contain: content;
+    content-visibility: auto;
+    contain-intrinsic-size: 0 500px;
+    min-height: 500px;
+    height: auto;
+    transition: height 0.3s ease-in-out;
+  }
+
+  /* Prevent layout shift for images */
+  img {
+    aspect-ratio: attr(width) / attr(height);
+    @apply max-w-full h-auto;
+    content-visibility: auto;
+    contain: content;
+    min-height: 100px;
+  }
+
+  /* Add smooth height transitions */
+  .section-wrapper {
+    transition: height 0.3s ease-in-out;
+    min-height: 500px;
+    height: auto;
+    contain: content;
+    content-visibility: auto;
+    contain-intrinsic-size: 0 500px;
+  }
+
+  /* Container defaults */
+  .container {
+    @apply mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Section spacing */
+  .section-content {
+    @apply py-8 md:py-12;
+    min-height: 500px;
+  }
+
+  /* Prevent layout shift for loading states */
+  .section-placeholder {
+    @apply min-h-[300px] md:min-h-[400px];
+    height: auto;
+    contain: content;
+    content-visibility: auto;
+    contain-intrinsic-size: 0 400px;
+  }
+}
+
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-green-700 dark:bg-yellow-400 rounded-full;
+}
