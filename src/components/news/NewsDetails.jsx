@@ -4,6 +4,7 @@ import { Copy, Facebook, Share2, Calendar, ChevronRight, ChevronLeft, Home } fro
 import { Carousel } from 'react-responsive-carousel';
 import 'react-responsive-carousel/lib/styles/carousel.min.css';
 import { useNewsDetails, useAllNews } from '../../api/queries';
+import { checkApiUrl } from '../../hooks/checkApiUrl';
 import { motion } from 'framer-motion';
 
 const carouselStyles = `
@@ -59,16 +60,50 @@ const NewsDetails = () => {
         }
 
         // Initialize Facebook SDK
-        if (window.FB) {
-            window.FB.XFBML.parse();
-        } else {
-            const script = document.createElement('script');
-            script.src = "https://connect.facebook.net/ar_AR/sdk.js#xfbml=1&version=v18.0";
-            script.async = true;
-            script.defer = true;
-            script.crossOrigin = "anonymous";
-            document.body.appendChild(script);
-        }
+        const initFacebookSDK = () => {
+            if (window.FB) {
+                try {
+                    window.FB.XFBML.parse();
+                } catch (error) {
+                    console.warn('Error parsing Facebook XFBML:', error);
+                }
+            } else {
+                // Add Facebook SDK
+                const facebookScript = document.createElement('script');
+                facebookScript.id = 'facebook-jssdk';
+                facebookScript.src = 'https://connect.facebook.net/ar_AR/sdk.js#xfbml=1&version=v18.0&autoLogAppEvents=1';
+                facebookScript.async = true;
+                facebookScript.defer = true;
+                facebookScript.crossOrigin = 'anonymous';
+
+                // Add event listeners to handle loading errors
+                facebookScript.onerror = () => {
+                    console.warn('Failed to load Facebook SDK');
+                };
+
+                // Insert the script before any other scripts
+                const firstScript = document.getElementsByTagName('script')[0];
+                firstScript.parentNode.insertBefore(facebookScript, firstScript);
+
+                // Add Facebook root div if it doesn't exist
+                if (!document.getElementById('fb-root')) {
+                    const fbRoot = document.createElement('div');
+                    fbRoot.id = 'fb-root';
+                    document.body.appendChild(fbRoot);
+                }
+            }
+        };
+
+        // Initialize Facebook SDK with a slight delay to ensure DOM is ready
+        setTimeout(initFacebookSDK, 1000);
+
+        // Cleanup function
+        return () => {
+            const facebookScript = document.getElementById('facebook-jssdk');
+            if (facebookScript) {
+                facebookScript.remove();
+            }
+        };
     }, [newsItem, id, navigate]);
 
     useEffect(() => {
@@ -392,7 +427,7 @@ const NewsDetails = () => {
                                         {newsItem.image && (
                                             <div className="flex justify-center items-center h-[500px] p-4">
                                                 <motion.img
-                                                    src={newsItem.image}
+                                                    src={checkApiUrl(newsItem.image)}
                                                     alt={newsItem.title}
                                                     className="w-full h-full object-cover"
                                                     loading="lazy"
@@ -407,7 +442,7 @@ const NewsDetails = () => {
                                         {newsItem.subphotos1 && (
                                             <div className="flex justify-center items-center h-[500px] p-4">
                                                 <img
-                                                    src={newsItem.subphotos1}
+                                                    src={checkApiUrl(newsItem.subphotos1)}
                                                     alt={`${newsItem.title} - صورة إضافية 1`}
                                                     className="max-w-full max-h-full object-contain"
                                                     loading="lazy"
@@ -422,7 +457,7 @@ const NewsDetails = () => {
                             ) : (
                                 <div className="flex justify-center items-center dark:bg-gray-900 h-[500px] p-4">
                                     <motion.img
-                                        src={newsItem.image}
+                                        src={checkApiUrl(newsItem.image)}
                                         alt={newsItem.title}
                                         className="w-full h-full object-cover"
                                         loading="lazy"

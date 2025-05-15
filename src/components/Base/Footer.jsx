@@ -3,16 +3,15 @@ import React from 'react';
 const Footer = () => {
   return (
     <footer
-      className="bg-emerald-900 dark:bg-gray-900 text-emerald-100 dark:text-gray-100 w-full mt-auto border-t dark:border-yellow-500/20"
+      className="bg-emerald-900 dark:bg-gray-900 text-emerald-100 dark:text-gray-100 w-full mt-auto border-t dark:border-yellow-500/20 min-h-[400px] h-auto"
       dir="rtl"
       style={{
         contain: 'content',
-        minHeight: '400px',
         height: 'auto'
       }}
     >
       <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8 flex flex-col h-full">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 flex-grow">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 flex-grow min-h-[200px]">
           {/* Company Info */}
           <div className="text-right flex flex-col min-h-[150px] flex-grow-0 flex-shrink-0 basis-auto">
             <h3 className="text-xl font-bold mb-4 font-arabic text-white">عن الدار</h3>
@@ -55,7 +54,7 @@ const Footer = () => {
         </div>
 
         {/* Copyright */}
-        <div className="border-t border-emerald-800 dark:border-yellow-500/20 mt-8 pt-4 text-center text-sm text-emerald-200 dark:text-gray-300">
+        <div className="border-t border-emerald-800 dark:border-yellow-500/20 mt-8 pt-4 text-center text-sm text-emerald-200 dark:text-gray-300 min-h-[24px]">
           <p className="min-h-[24px]">جميع الحقوق محفوظة  لدار الإتقان لتعليم القرآن  {new Date().getFullYear()} © </p>
         </div>
       </div>

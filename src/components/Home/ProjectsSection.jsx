@@ -136,10 +136,10 @@ const ProjectsSection = () => {
 
     return (
         <>
-            <meta name="description" content="مشاريع دار الإتقان للتعليم والتدريب" />
-            <meta name="keywords" content="مشاريع, دار الإتقان, تعليم" />
-            <meta property="og:title" content="مشاريع دار الإتقان" />
-            <meta property="og:description" content="مشاريع دار الإتقان للتعليم والتدريب" />
+            <meta name="description" content="مشاريع باحاجة لدعمكم" />
+            <meta name="keywords" content="مشاريع باحاجة لدعمكم" />
+            <meta property="og:title" content="مشاريع باحاجة لدعمكم" />
+            <meta property="og:description" content="مشاريع باحاجة لدعمكم" />
 
             <section className="relative py-24 min-h-screen overflow-hidden">
                 <div className="container mx-auto relative px-4">

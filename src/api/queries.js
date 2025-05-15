@@ -3,26 +3,45 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 
 const API_BASE_URL = '/api';
 
-// Create axios instance with retry logic
+// Create axios instance with optimized configuration
 export const apiClient = axios.create({
     baseURL: API_BASE_URL,
     headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': 'https://ditq.org',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type'
+        'Cache-Control': 'public, max-age=300', // 5 minute cache
     },
-    // Removing withCredentials since the server doesn't support it properly
-    timeout: 15000, // Increased timeout to 15 seconds
 });
 
-// Add retry interceptor with CORS handling
+// Optimized retry logic
 apiClient.interceptors.response.use(
-    response => response,
+    response => {
+        // Cache successful responses in memory
+        if (response.config.method === 'get') {
+            const cacheKey = `${response.config.url}`;
+            sessionStorage.setItem(cacheKey, JSON.stringify({
+                data: response.data,
+                timestamp: Date.now()
+            }));
+        }
+        return response;
+    },
     async (error) => {
         const { config } = error;
         const response = error.response || {};
+
+        // Check cache on error for GET requests
+        if (config.method === 'get') {
+            const cacheKey = `${config.url}`;
+            const cachedData = sessionStorage.getItem(cacheKey);
+            if (cachedData) {
+                const { data, timestamp } = JSON.parse(cachedData);
+                // Use cache if it's less than 5 minutes old
+                if (Date.now() - timestamp < 300000) {
+                    return Promise.resolve({ data });
+                }
+            }
+        }
 
         if (config && config._isRetry) {
             return Promise.reject(error);
@@ -31,18 +50,18 @@ apiClient.interceptors.response.use(
         const shouldRetry =
             !error.response ||
             response.status === 403 ||
-            response.status === 429 || // Add rate limiting handling
+            response.status === 429 ||
             (response.status >= 500 && response.status <= 599);
 
-        if (config && shouldRetry) {
+        if (config && shouldRetry && !config._isRetry) {
             config._isRetry = true;
             config._retryCount = (config._retryCount || 0) + 1;
 
-            if (config._retryCount >= 3) {
+            if (config._retryCount >= 2) { // Reduced retry count
                 return Promise.reject(error);
             }
 
-            const delay = Math.min(1000 * (2 ** config._retryCount), 10000);
+            const delay = Math.min(1000 * (2 ** config._retryCount), 5000); // Reduced max delay
             await new Promise(resolve => setTimeout(resolve, delay));
 
             return apiClient(config);
@@ -152,6 +171,29 @@ export const useAllNews = () => {
         queryFn: async () => {
             try {
                 const { data } = await apiClient.get('/news/API');
+                return processImageUrls(data);
+            } catch (error) {
+                console.error('Error fetching news:', error);
+                throw error;
+            }
+        },
+        staleTime: 1000 * 60 * 5,
+        retry: 3,
+        retryDelay: (attemptIndex) => Math.min(1000 * (2 ** attemptIndex), 10000),
+    });
+};
+export const useAdminAllNews = () => {
+    return useQuery({
+        queryKey: queryKeys.news,
+        queryFn: async () => {
+            try {
+                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                const { data } = await apiClient.get('/news/API/admin', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
                 return processImageUrls(data);
             } catch (error) {
                 console.error('Error fetching news:', error);

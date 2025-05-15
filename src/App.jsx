@@ -8,6 +8,8 @@ import {
 } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import PrivateRoute from './components/Admin/private/privateRoute';
+import { AuthProvider } from './components/Admin/context/AuthContext';
 
 const Header = lazy(() => import('./components/Base/Header'));
 const AllNewsPage = lazy(() => import('./components/news/NewsCards'));
@@ -37,8 +39,8 @@ const HomeManagement = lazy(() => import('./components/Admin/home/HomeManagement
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      gcTime: 1000 * 60 * 60 * 24, // 24 hours
+      staleTime: 1000 * 60 * 5, 
+      gcTime: 1000 * 60 * 60 * 24, 
       refetchOnWindowFocus: false,
       retry: 1,
     },
@@ -84,8 +86,12 @@ function Layout() {
           {/* Admin routes */}
           <Route path="/admin/login" element={<Login />} />
 
-          {/* Admin section with layout */}
-          <Route path="/admin" element={<AdminLayout />}>
+          {/* Protected Admin routes */}
+          <Route path="/admin" element={
+            <PrivateRoute>
+              <AdminLayout />
+            </PrivateRoute>
+          }>
             <Route index element={<Dashboard />} />
             <Route path="sections" element={<SectionsManagement />} />
             <Route path="sections/edit/:sectionId" element={<EditSection />} />
@@ -95,7 +101,6 @@ function Layout() {
               <Route path="new" element={<NewsEditForm />} />
               <Route path="edit/:newsId" element={<NewsEditForm />} />
             </Route>
-            {/* Add more admin routes as needed */}
           </Route>
 
           {/* Catch all route - redirect to home */}
@@ -111,10 +116,12 @@ function Layout() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <Layout />
-      </Router>
-      {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+      <AuthProvider>
+        <Router>
+          <Layout />
+        </Router>
+        {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

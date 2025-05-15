@@ -40,16 +40,21 @@ const VideoFrame = memo(({ src, title, className }) => {
     };
 
     return (
-        <iframe
-            className={className}
-            src={getEnhancedPrivacyUrl(src)}
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            title={title}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-        />
+        <div className="aspect-video w-full h-full" style={{ contain: 'layout paint size' }}>
+            <iframe
+                className={className}
+                src={getEnhancedPrivacyUrl(src)}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                title={title}
+                loading="lazy"
+                width="560"
+                height="315"
+                referrerPolicy="no-referrer-when-downgrade"
+                style={{ width: '100%', height: '100%' }}
+            />
+        </div>
     );
 });
 
@@ -97,13 +102,19 @@ const YouTubeSectionContent = memo(() => {
         return (
             <div className="py-4 px-4 sm:px-6 lg:px-8 lg:mx-32" dir='rtl'>
                 <Skeleton height={40} width={300} className="mb-16 mx-auto" />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6" style={{ minHeight: '400px' }}>
                     <div className="md:col-span-2">
-                        <Skeleton height={400} />
+                        <div className="aspect-video w-full h-full">
+                            <Skeleton height="100%" style={{ aspectRatio: '16/9' }} />
+                        </div>
                     </div>
                     <div className="md:col-span-1 grid grid-rows-2 gap-4">
-                        <Skeleton height={200} />
-                        <Skeleton height={200} />
+                        <div className="aspect-video w-full">
+                            <Skeleton height="100%" style={{ aspectRatio: '16/9' }} />
+                        </div>
+                        <div className="aspect-video w-full">
+                            <Skeleton height="100%" style={{ aspectRatio: '16/9' }} />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -124,18 +135,18 @@ const YouTubeSectionContent = memo(() => {
             <h2 className="text-2xl md:text-4xl font-bold text-center text-gray-800">
                 المكتبة المرئية
             </h2>
-            <div className="w-24 h-1  my-4 bg-gradient-to-r from-green-500 to-emerald-600 dark:from-yellow-400 dark:to-yellow-600 mx-auto rounded-full" />
+            <div className="w-24 h-1 my-4 bg-gradient-to-r from-green-500 to-emerald-600 dark:from-yellow-400 dark:to-yellow-600 mx-auto rounded-full" />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 min-h-[400px] md:min-h-[600px]">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6" style={{ minHeight: '400px', contain: 'layout' }}>
                 <div className="md:col-span-1 grid grid-rows-2 gap-4 h-full">
-                    <div className="w-full aspect-video">
+                    <div className="w-full aspect-video" style={{ contain: 'layout' }}>
                         <VideoFrame
                             className="w-full h-full rounded-lg"
                             src={videos[0].secondary1}
                             title="Secondary Video 1"
                         />
                     </div>
-                    <div className="w-full aspect-video">
+                    <div className="w-full aspect-video" style={{ contain: 'layout' }}>
                         <VideoFrame
                             className="w-full h-full rounded-lg"
                             src={videos[0].secondary2}
@@ -143,7 +154,7 @@ const YouTubeSectionContent = memo(() => {
                         />
                     </div>
                 </div>
-                <div className="md:col-span-2 aspect-[16/9]">
+                <div className="md:col-span-2 aspect-video">
                     <VideoFrame
                         className="w-full h-full rounded-lg"
                         src={videos[0].main}

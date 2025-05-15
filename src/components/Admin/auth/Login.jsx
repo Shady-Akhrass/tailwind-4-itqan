@@ -1,9 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, Loader2, Eye, EyeOff, CheckCircle, XCircle, ArrowRight } from 'lucide-react';
-import axios from 'axios';
+import { apiClient } from '../../../api/queries';
+import { useAuth } from '../context/AuthContext';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 const LoginForm = () => {
+    const { isAuthenticated, login } = useAuth();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const from = location.state?.from?.pathname || "/admin";
+
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
@@ -18,12 +25,10 @@ const LoginForm = () => {
     const [validEmail, setValidEmail] = useState(false);
     const [errors, setErrors] = useState({});
 
-    // Initialize axios with CSRF token
-    useEffect(() => {
-        axios.get('/sanctum/csrf-cookie').catch(error => {
-            console.error('Error fetching CSRF cookie:', error);
-        });
-    }, []);
+    // If already authenticated, redirect to admin
+    if (isAuthenticated) {
+        return <Navigate to="/admin" replace />;
+    }
 
     const validateEmail = (email) => {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -56,7 +61,7 @@ const LoginForm = () => {
         setErrors({});
 
         try {
-            const response = await axios.post('https://api.ditq.org/api/login', formData, {
+            const response = await apiClient.post('/login/API', formData, {
                 headers: {
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
@@ -64,10 +69,10 @@ const LoginForm = () => {
             });
 
             if (response.data.message === 'success' || response.status === 200) {
-                window.location.href = '/';
-                console.log(`Login successful! ${response.data.message}`);
+                const { user, token } = response.data;
+                await login({ user, token }, formData.remember);
+                navigate(from, { replace: true });
             }
-
         } catch (error) {
             if (error.response) {
                 if (error.response.status === 422) {

@@ -1,15 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useNewsDetailsById, getImageUrl, apiClient } from '../../../api/queries';
 import { checkApiUrl } from '../../../hooks/checkApiUrl';
 import {
     ArrowLeft,
     Save,
-    Upload,
-    Trash2,
-    X,
-    Image,
-    Info,
     AlertTriangle,
     CheckCircle,
     Loader2,
@@ -17,12 +12,16 @@ import {
     ToggleRight,
     ToggleLeft,
     EyeOff,
-    Eye
+    Eye,
+    Lightbulb,
+    Sparkles
 } from 'lucide-react';
+import AISuggestionModal from './AISuggestionModal';
 
 const NewsEditForm = () => {
     const { newsId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const isEditMode = Boolean(newsId);
 
     // Use the useNewsDetails hook to fetch data
@@ -30,39 +29,54 @@ const NewsEditForm = () => {
 
     const [formData, setFormData] = useState({
         title: '',
-        subject: '',
-        content: '',
-        images: [],
+        object: '',
         status: 'active'
     });
     const [error, setError] = useState(null);
     const [saving, setSaving] = useState(false);
     const [success, setSuccess] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState(0);
-    const [uploadingFiles, setUploadingFiles] = useState(false);
-    const [selectedImage, setSelectedImage] = useState(null);
-    const [newImages, setNewImages] = useState([]);
-    const [imagesToDelete, setImagesToDelete] = useState([]);
-    const [formTouched, setFormTouched] = useState(false);
     const [loadingRetry, setLoadingRetry] = useState(false);
     const [showDebugInfo, setShowDebugInfo] = useState(false);
     const [apiTestResult, setApiTestResult] = useState(null);
     const [apiTestError, setApiTestError] = useState(null);
     const [apiTesting, setApiTesting] = useState(false);
+    const [mainImage, setMainImage] = useState(null); // For new main image file
+    const [subImage, setSubImage] = useState(null); // For new sub image file
+    const [formTouched, setFormTouched] = useState(false);
+
+    // New state for AI Suggestion Modal
+    const [aiModalOpen, setAiModalOpen] = useState(false);
+    const [aiModalAction, setAiModalAction] = useState('');
+
+    const fileInputMainImageRef = useRef(null); // Ref for main image input
+    const fileInputSubImageRef = useRef(null); // Ref for sub image input
 
     // Process the news data when it's loaded
     useEffect(() => {
         if (isEditMode && newsData) {
-            console.log('Loaded news data:', newsData);
             setFormData({
                 title: newsData.title || '',
-                subject: newsData.subject || newsData.object || '',
-                content: newsData.content || newsData.object || newsData.subject || '',
-                images: newsData.news_images || [],
+                object: newsData.object || '',
                 status: newsData.status || 'active'
             });
+            setMainImage(null); // Reset main image file on load
+            setSubImage(null); // Reset sub image file on load
         }
     }, [newsData, isEditMode]);
+
+    // Effect to handle updates coming back from AI suggestion page
+    useEffect(() => {
+        if (location.state?.selectedValue && location.state?.updatedField) {
+            const { selectedValue, updatedField } = location.state;
+            setFormData(prev => ({
+                ...prev,
+                [updatedField]: selectedValue
+            }));
+            setFormTouched(true);
+            // Clear the state to prevent re-applying on refresh or other navigations
+            navigate(location.pathname, { state: {}, replace: true });
+        }
+    }, [location.state, navigate, location.pathname]);
 
     // Set error state if fetch fails
     useEffect(() => {
@@ -86,124 +100,142 @@ const NewsEditForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Validate required fields
+        if (!formData.title?.trim()) {
+            setError('حقل العنوان مطلوب');
+            return;
+        }
+
+        if (!formData.object?.trim()) {
+            setError('حقل المحتوى مطلوب');
+            return;
+        }
+
         setSaving(true);
         setError(null);
 
         try {
-            // Upload new images if any
-            if (newImages.length > 0) {
-                await uploadImages();
-            }
+            // Get the token from localStorage or wherever it's stored
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 
-            // Delete marked images if any
-            if (imagesToDelete.length > 0) {
-                await deleteImages();
-            }
+            // Choose the appropriate endpoint based on whether we're creating or updating
+            const endpoint = isEditMode ? `news/update/${newsId}/API` : 'news/store/API';
 
-            // Submit the form data
+            // For PATCH requests with FormData in Axios, we need to be careful with the implementation
+            // Let's try a different approach for PATCH specifically
+
             if (isEditMode) {
-                // Update existing news
-                // In a real implementation, use actual API
-                // await apiClient.put(`/news/${newsId}`, formData);
-                console.log('Updating news:', formData);
+                // PATCH request handling
+                // Prepare form data for submission
+                const formDataToSubmit = new FormData();
+
+                // Make sure to include the _method field for Laravel to recognize it as PATCH
+                formDataToSubmit.append('_method', 'PATCH');
+
+                // Add required fields
+                formDataToSubmit.append('title', formData.title.trim());
+                formDataToSubmit.append('object', formData.object.trim());
+                formDataToSubmit.append('status', formData.status);
+
+                // Add main image if changed
+                if (mainImage) {
+                    formDataToSubmit.append('image', mainImage);
+                }
+
+                // Add sub image if changed
+                if (subImage) {
+                    formDataToSubmit.append('subphotos1', subImage);
+                }
+
+                // Debug what's being sent
+                console.log('Sending form data:');
+                for (let [key, value] of formDataToSubmit.entries()) {
+                    console.log(`${key}: ${value instanceof File ? value.name : value}`);
+                }
+
+                // Use POST method with _method field for Laravel
+                const response = await apiClient({
+                    method: 'post',
+                    url: endpoint,
+                    data: formDataToSubmit,
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'Authorization': `Bearer ${token}`,
+                        'X-HTTP-Method-Override': 'PATCH'
+                    }
+                });
+
+                console.log('Server response:', response.data);
+
+                setSaving(false);
+                setSuccess(true);
+                setFormTouched(false);
+
+                // Navigate back after success
+                setTimeout(() => {
+                    navigate('/admin/news');
+                }, 1500);
             } else {
-                // Create new news
-                // In a real implementation, use actual API
-                // await apiClient.post('/news', formData);
-                console.log('Creating news:', formData);
+                // For POST requests (create), use the original approach
+                const formDataToSubmit = new FormData();
+                formDataToSubmit.append('title', formData.title.trim());
+                formDataToSubmit.append('object', formData.object.trim());
+                formDataToSubmit.append('status', formData.status);
+
+                // Add main image if provided
+                if (mainImage) {
+                    formDataToSubmit.append('image', mainImage);
+                }
+
+                // Add sub image if provided
+                if (subImage) {
+                    formDataToSubmit.append('subphotos1', subImage);
+                }
+
+                // Submit the form data with authorization header
+                const response = await apiClient({
+                    method: 'post',
+                    url: endpoint,
+                    data: formDataToSubmit,
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                console.log('Server response:', response.data);
+
+                setSaving(false);
+                setSuccess(true);
+                setFormTouched(false);
+
+                // Navigate back after success
+                setTimeout(() => {
+                    navigate('/admin/news');
+                }, 1500);
             }
-
-            setSaving(false);
-            setSuccess(true);
-            setFormTouched(false);
-
-            // Navigate back after success
-            setTimeout(() => {
-                navigate('/admin/news');
-            }, 1500);
         } catch (error) {
             console.error('Error saving news:', error);
-            setError('فشل في حفظ الخبر');
+            if (error.response?.data?.errors) {
+                // Handle Laravel validation errors
+                const errorMessages = Object.values(error.response.data.errors)
+                    .flat()
+                    .map(msg => msg.replace('The ', '').replace(' field', ''))
+                    .join(', ');
+                setError(errorMessages);
+            } else if (error.response?.data?.message) {
+                // Handle custom error message from the API
+                setError(error.response.data.message);
+            } else if (!error.response) {
+                // Handle network/connection errors
+                setError('فشل في الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت الخاص بك والمحاولة مرة أخرى');
+            } else {
+                // Handle generic error
+                setError('فشل في حفظ الخبر. يرجى المحاولة مرة أخرى');
+            }
             setSaving(false);
         }
-    };
-
-    const uploadImages = async () => {
-        setUploadingFiles(true);
-
-        try {
-            // Simulate progress
-            for (let i = 0; i <= 100; i += 10) {
-                setUploadProgress(i);
-                await new Promise(r => setTimeout(r, 100));
-            }
-
-            // In a real implementation, upload the files
-            // const formData = new FormData();
-            // newImages.forEach(file => formData.append('images[]', file));
-            // await apiClient.post(`/news/${newsId}/images`, formData);
-
-            // For now, just simulate the upload
-            const fakeUploadedImages = newImages.map((file, index) => ({
-                id: `new_${Date.now()}_${index}`,
-                image: URL.createObjectURL(file),
-                news_id: newsId || 'new'
-            }));
-
-            setFormData(prev => ({
-                ...prev,
-                images: [...prev.images, ...fakeUploadedImages]
-            }));
-
-            setNewImages([]);
-            setUploadingFiles(false);
-            setUploadProgress(0);
-        } catch (error) {
-            console.error('Error uploading images:', error);
-            setError('فشل في رفع الصور');
-            setUploadingFiles(false);
-        }
-    };
-
-    const deleteImages = async () => {
-        try {
-            // In a real implementation, call API to delete images
-            // await apiClient.delete(`/news/images`, { data: { image_ids: imagesToDelete } });
-
-            // For now, just update the local state
-            setFormData(prev => ({
-                ...prev,
-                images: prev.images.filter(img => !imagesToDelete.includes(img.id))
-            }));
-
-            setImagesToDelete([]);
-        } catch (error) {
-            console.error('Error deleting images:', error);
-            setError('فشل في حذف الصور');
-        }
-    };
-
-    const handleImageUpload = (e) => {
-        const files = Array.from(e.target.files);
-        setNewImages(prev => [...prev, ...files]);
-        setFormTouched(true);
-    };
-
-    const removeNewImage = (index) => {
-        setNewImages(prev => prev.filter((_, i) => i !== index));
-    };
-
-    const markImageForDeletion = (id) => {
-        setImagesToDelete(prev => [...prev, id]);
-        setFormTouched(true);
-    };
-
-    const undoImageDeletion = (id) => {
-        setImagesToDelete(prev => prev.filter(imgId => imgId !== id));
-    };
-
-    const openImagePreview = (image) => {
-        setSelectedImage(image);
     };
 
     const handleRetryLoad = () => {
@@ -233,10 +265,48 @@ const NewsEditForm = () => {
         setFormTouched(true);
     };
 
+    // Handle main image change
+    const handleMainImageClick = () => {
+        if (fileInputMainImageRef.current) fileInputMainImageRef.current.click();
+    };
+
+    const handleSubImageClick = () => {
+        if (fileInputSubImageRef.current) fileInputSubImageRef.current.click();
+    };
+
+    const handleMainImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setMainImage(file);
+            setFormTouched(true);
+        }
+    };
+
+    const handleSubImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setSubImage(file);
+            setFormTouched(true);
+        }
+    };
+
     // Helper function to get proper image URL
     const getProperImageUrl = (imagePath) => {
         if (!imagePath) return '';
         return checkApiUrl(getImageUrl(imagePath));
+    };
+
+    // Helper function to get main image preview
+    const getMainImagePreview = () => {
+        if (mainImage) return URL.createObjectURL(mainImage);
+        if (newsData && newsData.image) return getProperImageUrl(newsData.image);
+        return '/logo.png';
+    };
+
+    const getSubImagePreview = () => {
+        if (subImage) return URL.createObjectURL(subImage);
+        if (newsData && newsData.subphotos1) return getProperImageUrl(newsData.subphotos1);
+        return '/logo.png';
     };
 
     // Direct API test function
@@ -248,7 +318,14 @@ const NewsEditForm = () => {
         setApiTestError(null);
 
         try {
-            const response = await apiClient.get(`/news/${newsId}/details/API`);
+            // Get token from storage
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+
+            const response = await apiClient.get(`/news/${newsId}/details/API`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             console.log('Direct API call result:', response.data);
             setApiTestResult(response.data);
         } catch (error) {
@@ -257,6 +334,26 @@ const NewsEditForm = () => {
         } finally {
             setApiTesting(false);
         }
+    };    // Function to open AI suggestion modal
+    const goToAISuggestions = (actionType) => {
+        setAiModalAction(actionType);
+        setAiModalOpen(true);
+    };
+
+    // Handle AI suggestion selection
+    const handleAiSuggestionSelect = (selectedValue) => {
+        if (aiModalAction === 'suggestTitle') {
+            setFormData(prev => ({
+                ...prev,
+                title: selectedValue
+            }));
+        } else if (aiModalAction === 'enhanceContent') {
+            setFormData(prev => ({
+                ...prev,
+                object: selectedValue
+            }));
+        }
+        setFormTouched(true);
     };
 
     if (isLoading) {
@@ -274,7 +371,7 @@ const NewsEditForm = () => {
         );
     }
 
-    if (error && !formData.title) {
+    if (error && !formData.title && !location.state?.selectedValue) {
         return (
             <div className="container mx-auto px-4 py-8">
                 <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-md p-6">
@@ -363,6 +460,10 @@ const NewsEditForm = () => {
 
                             <h3 className="font-bold mb-2 mt-4">Form Data:</h3>
                             <pre>{JSON.stringify(formData, null, 2)}</pre>
+
+                            <h3 className="font-bold mb-2 mt-4">Images:</h3>
+                            <pre>Main Image: {mainImage ? mainImage.name : 'None'}</pre>
+                            <pre>Sub Image: {subImage ? subImage.name : 'None'}</pre>
                         </div>
                     )}
                 </div>
@@ -370,6 +471,59 @@ const NewsEditForm = () => {
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="max-w-4xl mx-auto bg-white rounded-xl shadow-md p-6">
+                {/* Main Image Preview & Change */}
+                <div className="mb-6 flex flex-row items-start justify-center gap-6">
+                    {/* Main Image */}
+                    <div className="flex flex-col items-center">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">الصورة الرئيسية</label>
+                        <div className="relative group w-48 h-48 mb-2">
+                            <img
+                                src={getMainImagePreview()}
+                                alt="Main Preview"
+                                className="w-48 h-48 object-cover rounded-lg border border-gray-300 cursor-pointer"
+                                onClick={handleMainImageClick}
+                                title="اضغط لتغيير الصورة الرئيسية"
+                            />
+                            <input
+                                type="file"
+                                accept="image/*"
+                                ref={fileInputMainImageRef}
+                                style={{ display: 'none' }}
+                                onChange={handleMainImageChange}
+                            />
+                            <span className="absolute bottom-2 left-2 bg-white bg-opacity-80 px-2 py-1 rounded text-xs text-gray-700 group-hover:bg-green-100">
+                                تغيير الصورة
+                            </span>
+                        </div>
+                        {mainImage && <div className="text-xs text-green-600">تم اختيار صورة جديدة</div>}
+                    </div>
+
+                    {/* Sub Image */}
+                    <div className="flex flex-col items-center">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">الصورة الفرعية</label>
+                        <div className="relative group w-48 h-48 mb-2">
+                            <img
+                                src={getSubImagePreview()}
+                                alt="Sub Preview"
+                                className="w-48 h-48 object-cover rounded-lg border border-gray-300 cursor-pointer"
+                                onClick={handleSubImageClick}
+                                title="اضغط لتغيير الصورة الفرعية"
+                            />
+                            <input
+                                type="file"
+                                accept="image/*"
+                                ref={fileInputSubImageRef}
+                                style={{ display: 'none' }}
+                                onChange={handleSubImageChange}
+                            />
+                            <span className="absolute bottom-2 left-2 bg-white bg-opacity-80 px-2 py-1 rounded text-xs text-gray-700 group-hover:bg-green-100">
+                                تغيير الصورة
+                            </span>
+                        </div>
+                        {subImage && <div className="text-xs text-green-600">تم اختيار صورة جديدة</div>}
+                    </div>
+                </div>
+
                 {/* Status Toggle */}
                 <div className="mb-6 flex justify-end">
                     <button
@@ -396,9 +550,20 @@ const NewsEditForm = () => {
 
                 {/* Title */}
                 <div className="mb-6">
-                    <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-                        عنوان الخبر <span className="text-red-500">*</span>
-                    </label>
+                    <div className="flex justify-between items-center mb-1">
+                        <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                            عنوان الخبر <span className="text-red-500">*</span>
+                        </label>
+                        <button
+                            type="button"
+                            onClick={() => goToAISuggestions('suggestTitle')}
+                            className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                            title="اقترح عنوانًا باستخدام الذكاء الاصطناعي (بناءً على المحتوى)"
+                        >
+                            <Lightbulb className="w-4 h-4" />
+                            اقترح عنوان
+                        </button>
+                    </div>
                     <input
                         type="text"
                         id="title"
@@ -411,171 +576,32 @@ const NewsEditForm = () => {
                     />
                 </div>
 
-                {/* Subject */}
+                {/* Object - Content field */}
                 <div className="mb-6">
-                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
-                        الموضوع <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        id="subject"
-                        name="subject"
-                        value={formData.subject}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        required
-                        dir="rtl"
-                    />
-                </div>
-
-                {/* Content */}
-                <div className="mb-6">
-                    <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
-                        محتوى الخبر <span className="text-red-500">*</span>
-                    </label>
+                    <div className="flex justify-between items-center mb-1">
+                        <label htmlFor="object" className="block text-sm font-medium text-gray-700">
+                            محتوى الخبر <span className="text-red-500">*</span>
+                        </label>
+                        <button
+                            type="button"
+                            onClick={() => goToAISuggestions('enhanceContent')}
+                            className="text-xs text-purple-600 hover:text-purple-800 flex items-center gap-1"
+                            title="تحسين المحتوى باستخدام الذكاء الاصطناعي"
+                        >
+                            <Sparkles className="w-4 h-4" />
+                            تحسين المحتوى
+                        </button>
+                    </div>
                     <textarea
-                        id="content"
-                        name="content"
-                        value={formData.content}
+                        id="object"
+                        name="object"
+                        value={formData.object}
                         onChange={handleInputChange}
-                        rows={6}
+                        rows={12}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         required
                         dir="rtl"
                     ></textarea>
-                </div>
-
-                {/* Images */}
-                <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-3">صور الخبر</label>
-
-                    {/* Existing Images */}
-                    {formData.images.length > 0 && (
-                        <div className="mb-4">
-                            <p className="text-sm text-gray-500 mb-2">الصور الحالية</p>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                {formData.images.map((image) => (
-                                    <div
-                                        key={image.id}
-                                        className={`relative group bg-gray-100 rounded-lg overflow-hidden aspect-square ${imagesToDelete.includes(image.id) ? 'opacity-40' : ''
-                                            }`}
-                                    >
-                                        <img
-                                            src={typeof image.image === 'string'
-                                                ? getProperImageUrl(image.image)
-                                                : URL.createObjectURL(image)}
-                                            alt="News"
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => {
-                                                e.target.onerror = null;
-                                                e.target.src = '/placeholder-image.jpg';
-                                            }}
-                                        />
-                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                            <div className="flex gap-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => openImagePreview(image)}
-                                                    className="p-1 bg-white rounded-full text-blue-600 hover:text-blue-800"
-                                                >
-                                                    <Image className="w-5 h-5" />
-                                                </button>
-
-                                                {imagesToDelete.includes(image.id) ? (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => undoImageDeletion(image.id)}
-                                                        className="p-1 bg-white rounded-full text-blue-600 hover:text-blue-800"
-                                                    >
-                                                        <RefreshCcw className="w-5 h-5" />
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => markImageForDeletion(image.id)}
-                                                        className="p-1 bg-white rounded-full text-red-600 hover:text-red-800"
-                                                    >
-                                                        <Trash2 className="w-5 h-5" />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* New Images */}
-                    {newImages.length > 0 && (
-                        <div className="mb-4">
-                            <p className="text-sm text-gray-500 mb-2">الصور الجديدة</p>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                {newImages.map((file, index) => (
-                                    <div key={index} className="relative group">
-                                        <div className="bg-gray-100 rounded-lg overflow-hidden aspect-square">
-                                            <img
-                                                src={URL.createObjectURL(file)}
-                                                alt={`New ${index + 1}`}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => removeNewImage(index)}
-                                            className="absolute top-1 right-1 p-1 bg-white rounded-full text-red-600 hover:text-red-800 shadow-sm"
-                                        >
-                                            <X className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Upload Progress */}
-                    {uploadingFiles && (
-                        <div className="mb-4">
-                            <div className="flex items-center justify-between mb-1">
-                                <span className="text-sm text-gray-500">جاري رفع الصور...</span>
-                                <span className="text-sm text-gray-500">{uploadProgress}%</span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                                <div
-                                    className="bg-green-500 h-2 rounded-full"
-                                    style={{ width: `${uploadProgress}%` }}
-                                ></div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Upload Button */}
-                    <div className="flex items-center justify-center w-full">
-                        <label
-                            htmlFor="dropzone-file"
-                            className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer ${uploadingFiles ? 'border-gray-300 bg-gray-50' : 'border-gray-300 hover:border-green-500 hover:bg-green-50'
-                                }`}
-                        >
-                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                <Upload
-                                    className={`w-10 h-10 mb-3 ${uploadingFiles ? 'text-gray-400' : 'text-gray-500'}`}
-                                />
-                                <p className="mb-2 text-sm text-gray-500">
-                                    <span className="font-medium">اضغط لإضافة صور</span> أو قم بسحب الصور هنا
-                                </p>
-                                <p className="text-xs text-gray-500">PNG, JPG, GIF (الحد الأقصى: 10 ميجابايت لكل صورة)</p>
-                            </div>
-                            <input
-                                id="dropzone-file"
-                                type="file"
-                                className="hidden"
-                                multiple
-                                accept="image/*"
-                                onChange={handleImageUpload}
-                                disabled={uploadingFiles}
-                            />
-                        </label>
-                    </div>
                 </div>
 
                 {/* Error message */}
@@ -627,33 +653,21 @@ const NewsEditForm = () => {
                             </>
                         )}
                     </button>
-                </div>
-            </form>
+                </div>            </form>
 
-            {/* Image Preview Modal */}
-            {selectedImage && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg p-1 max-w-3xl w-full max-h-[90vh] overflow-hidden">
-                        <div className="relative">
-                            <img
-                                src={typeof selectedImage.image === 'string'
-                                    ? getProperImageUrl(selectedImage.image)
-                                    : URL.createObjectURL(selectedImage)}
-                                alt="Preview"
-                                className="w-full max-h-[80vh] object-contain"
-                            />
-                            <button
-                                onClick={() => setSelectedImage(null)}
-                                className="absolute top-2 right-2 p-1 bg-white rounded-full text-gray-800 hover:text-red-600 shadow-sm"
-                            >
-                                <X className="w-6 h-6" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* AI Suggestion Modal */}
+            <AISuggestionModal
+                isOpen={aiModalOpen}
+                onClose={() => setAiModalOpen(false)}
+                initialContent={formData.object}
+                initialTitle={formData.title}
+                action={aiModalAction}
+                onSelect={handleAiSuggestionSelect}
+                mainImage={mainImage}
+                subImage={subImage}
+            />
         </div>
     );
 };
 
-export default NewsEditForm; 
+export default NewsEditForm;

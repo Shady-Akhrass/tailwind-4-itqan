@@ -51,11 +51,11 @@ const AdminSidebar = ({ isOpen }) => {
         { to: '/admin/sections/diwan', icon: Award, label: 'قسم الديوان' },
     ];
 
-    const otherLinks = [
-        { to: '/admin/analytics', icon: BarChart2, label: 'الإحصائيات' },
-        { to: '/admin/contact', icon: Mail, label: 'نماذج التواصل' },
-        { to: '/admin/settings', icon: Settings, label: 'الإعدادات' },
-    ];
+    // const otherLinks = [
+    //     { to: '/admin/analytics', icon: BarChart2, label: 'الإحصائيات' },
+    //     { to: '/admin/contact', icon: Mail, label: 'نماذج التواصل' },
+    //     { to: '/admin/settings', icon: Settings, label: 'الإعدادات' },
+    // ];
 
     const isLinkActive = (linkPath, exact = false) => {
         if (exact) return path === linkPath;
@@ -102,7 +102,7 @@ const AdminSidebar = ({ isOpen }) => {
                 </div>
 
                 {/* Other Links */}
-                <div className="space-y-1">
+                {/* <div className="space-y-1">
                     <h3 className="text-xs uppercase text-gray-500 font-semibold px-4 py-2">إدارة</h3>
                     {otherLinks.map((link) => (
                         <SidebarLink
@@ -113,7 +113,7 @@ const AdminSidebar = ({ isOpen }) => {
                             active={isLinkActive(link.to)}
                         />
                     ))}
-                </div>
+                </div> */}
             </div>
 
             {/* Admin Info */}

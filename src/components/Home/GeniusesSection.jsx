@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, memo } from 'react';
+import React, { useEffect, useState, useRef, memo, useCallback } from 'react';
 import { apiClient } from '../../api/queries';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
@@ -85,38 +85,37 @@ const GeniusesSection = memo(() => {
     const [geniuses, setGeniuses] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
-    const [compressedImages, setCompressedImages] = useState({});
-    const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedGenius, setSelectedGenius] = useState(null);
+    const timerRef = useRef(null);
+    const observerRef = useRef(null);
+    const sectionRef = useRef(null);
 
-    const compressAndCacheImage = async (imageUrl, id) => {
-        try {
-            const compressedUrl = await imageUrl;
-            setCompressedImages(prev => ({ ...prev, [id]: compressedUrl }));
-            return compressedUrl;
-        } catch (error) {
-            console.error("Image compression failed:", error);
-            return imageUrl;
-        }
-    };
+    // Optimized image loading with priority hints
+    const preloadNextImage = useCallback((index) => {
+        if (!geniuses[index]) return;
+        const img = new Image();
+        img.fetchPriority = "low";
+        img.loading = "lazy";
+        img.src = checkApiUrl(geniuses[index].image);
+    }, [geniuses]);
 
     useEffect(() => {
-        const fetchGeniuses = async () => {
+        const fetchData = async () => {
             try {
                 const response = await apiClient.get('/home/API', {
                     headers: {
-                        'Accept': 'application/json'
+                        'Accept': 'application/json',
+                        'Cache-Control': 'max-age=300' // 5 minute cache
                     }
                 });
                 const geniusData = response?.data?.geniuses || [];
                 setGeniuses(geniusData);
 
-                // Process images in parallel
-                await Promise.all(
-                    geniusData.map(genius =>
-                        genius.image && compressAndCacheImage(genius.image, genius.id)
-                    )
-                );
+                // Preload next 2 images
+                if (geniusData.length > 0) {
+                    preloadNextImage(1);
+                    preloadNextImage(2);
+                }
             } catch (error) {
                 console.error("Error fetching geniuses:", error);
             } finally {
@@ -124,37 +123,65 @@ const GeniusesSection = memo(() => {
             }
         };
 
-        fetchGeniuses();
+        fetchData();
+    }, [preloadNextImage]);
+
+    // Optimized intersection observer setup
+    useEffect(() => {
+        if (!sectionRef.current) return;
+
+        observerRef.current = new IntersectionObserver(
+            (entries) => {
+                const [entry] = entries;
+                if (entry.isIntersecting) {
+                    // Start timer only when visible
+                    if (!timerRef.current && geniuses.length > 1) {
+                        timerRef.current = setInterval(() => {
+                            setCurrentIndex(prev => (prev + 1) % geniuses.length);
+                        }, 5000);
+                    }
+                } else {
+                    // Clear timer when not visible
+                    if (timerRef.current) {
+                        clearInterval(timerRef.current);
+                        timerRef.current = null;
+                    }
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        observerRef.current.observe(sectionRef.current);
 
         return () => {
-            // Cleanup blob URLs
-            Object.values(compressedImages).forEach(url => {
-                if (url?.startsWith('blob:')) {
-                    URL.revokeObjectURL(url);
-                }
-            });
+            if (observerRef.current) {
+                observerRef.current.disconnect();
+            }
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+            }
         };
+    }, [geniuses.length]);
+
+    // Memoized modal state management
+    const handleModalOpen = useCallback((genius) => {
+        setSelectedGenius(genius);
+        // Pause rotation when modal is open
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+        }
     }, []);
 
-    useEffect(() => {
-        if (geniuses.length === 0 || isModalOpen) return;
-
-        const interval = setInterval(() => {
-            setCurrentIndex(prevIndex => (prevIndex + 1) % geniuses.length);
-        }, 3000);
-
-        return () => clearInterval(interval);
-    }, [geniuses.length, isModalOpen]);
-
-    const openModal = (genius) => {
-        setSelectedGenius(genius);
-        setIsModalOpen(true);
-    };
-
-    const closeModal = () => {
-        setIsModalOpen(false);
+    const handleModalClose = useCallback(() => {
         setSelectedGenius(null);
-    };
+        // Resume rotation when modal is closed
+        if (!timerRef.current && geniuses.length > 1) {
+            timerRef.current = setInterval(() => {
+                setCurrentIndex(prev => (prev + 1) % geniuses.length);
+            }, 5000);
+        }
+    }, [geniuses.length]);
 
     if (isLoading) return (
         <section className="relative py-8 md:py-16 min-h-screen overflow-hidden">
@@ -176,19 +203,19 @@ const GeniusesSection = memo(() => {
             <meta property="og:title" content="نوابغ دار الإتقان" />
             <meta property="og:description" content="تعرف على نوابغ دار الإتقان للتعليم والتدريب" />
 
-            <section className="relative py-8 md:py-16 min-h-screen overflow-hidden" >
+            <section className="relative py-8 md:py-16 min-h-screen overflow-hidden" ref={sectionRef}>
                 <div className="container mx-auto text-center relative px-4">
                     <h2 className="text-3xl md:text-4xl font-bold text-center  text-gray-800">نوابغ الإتقان</h2>
                     <div className="w-24 h-1  my-4 bg-gradient-to-r from-green-500 to-emerald-600 dark:from-yellow-400 dark:to-yellow-600 mx-auto rounded-full" />
                     <div className="bg-white flex items-center justify-between w-full">
                         <motion.div
-                            onClick={() => openModal(currentGenius)}
+                            onClick={() => handleModalOpen(currentGenius)}
                             whileHover={{ scale: 1.02 }}
                             className="flex flex-col md:flex-row items-stretch rounded-xl border-2 shadow-lg overflow-hidden w-full min-h-[500px] cursor-pointer"
                         >
                             <div className="relative w-full md:w-2/5 h-48 md:h-auto overflow-hidden">
                                 <img
-                                    src={checkApiUrl(compressedImages[currentGenius?.id] || currentGenius?.image)}
+                                    src={checkApiUrl(currentGenius?.image)}
                                     alt={currentGenius?.name}
                                     className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                                     width="800"
@@ -233,7 +260,7 @@ const GeniusesSection = memo(() => {
 
                 {/* Modal */}
                 <AnimatePresence>
-                    {isModalOpen && selectedGenius && (
+                    {selectedGenius && (
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -249,7 +276,7 @@ const GeniusesSection = memo(() => {
                             >
                                 <div className="relative h-full">
                                     <button
-                                        onClick={closeModal}
+                                        onClick={handleModalClose}
                                         className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center bg-black/70 text-white rounded-full hover:bg-black transition-colors z-10"
                                     >
                                         <X size={24} />
@@ -258,7 +285,7 @@ const GeniusesSection = memo(() => {
                                     <div className="grid md:grid-cols-2 h-full">
                                         <div className="order-2 md:order-1 h-full">
                                             <motion.img
-                                                src={checkApiUrl(compressedImages[selectedGenius.id]) || checkApiUrl(selectedGenius.image)}
+                                                src={checkApiUrl(selectedGenius.image)}
                                                 alt={selectedGenius.name}
                                                 className="w-full h-full object-cover"
                                                 initial={{ opacity: 0 }}

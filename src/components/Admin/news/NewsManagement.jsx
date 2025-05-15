@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAllNews, getImageUrl } from '../../../api/queries';
+import { useAdminAllNews, getImageUrl } from '../../../api/queries';
 import { checkApiUrl } from '../../../hooks/checkApiUrl';
+import { useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '../../../api/queries';
 import {
     Edit,
     Trash2,
@@ -20,7 +22,8 @@ import {
 } from 'lucide-react';
 
 const NewsManagement = () => {
-    const { data: newsData, isLoading, error: fetchError } = useAllNews();
+    const queryClient = useQueryClient();
+    const { data: newsData, isLoading, error: fetchError } = useAdminAllNews();
     const [news, setNews] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [stats, setStats] = useState({ active: 0, inactive: 0, total: 0 });
@@ -28,30 +31,27 @@ const NewsManagement = () => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
-    const [error, setError] = useState(null);
-
-    useEffect(() => {
+    const [error, setError] = useState(null); useEffect(() => {
         if (newsData) {
             let processedNewsData = Array.isArray(newsData) ? newsData : [newsData];
 
-            // Add active status if not present
-            processedNewsData = processedNewsData.map(item => ({
-                ...item,
-                status: item.status || 'active',
-                views: item.views || Math.floor(Math.random() * 1000) // Fallback random views for demonstration
-            }));
+            // Sort news by date in descending order (latest first)
+            processedNewsData.sort((a, b) => {
+                const dateA = new Date(a.created_at);
+                const dateB = new Date(b.created_at);
+                return dateB - dateA;
+            });
 
-            // Calculate stats
+            setNews(processedNewsData);
+
+            // Update stats
             const active = processedNewsData.filter(item => item.status === 'active').length;
             const total = processedNewsData.length;
-
             setStats({
                 active,
                 inactive: total - active,
                 total
             });
-
-            setNews(processedNewsData);
         }
     }, [newsData]);
 
@@ -59,61 +59,49 @@ const NewsManagement = () => {
         if (fetchError) {
             setError('فشل في تحميل الأخبار');
         }
-    }, [fetchError]);
-
-    const handleDeleteNews = async (newsId) => {
+    }, [fetchError]); const handleDeleteNews = async (newsId) => {
         setIsDeleting(true);
         try {
-            // API call would go here
-            // await apiClient.delete(`/news/${newsId}`);
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 
-            // For now, we'll just simulate success
-            setTimeout(() => {
-                const updatedNews = news.filter(item => item.id !== newsId);
-                setNews(updatedNews);
+            await apiClient.delete(`/news/delete/${newsId}/API`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            });
 
-                // Update stats
-                const active = updatedNews.filter(item => item.status === 'active').length;
-                const total = updatedNews.length;
-                setStats({
-                    active,
-                    inactive: total - active,
-                    total
-                });
+            // Invalidate and refetch news data
+            await queryClient.invalidateQueries(['news']);
 
-                setShowConfirmDelete(null);
-                setIsDeleting(false);
-            }, 1000);
+            setShowConfirmDelete(null);
+            setIsDeleting(false);
         } catch (error) {
             console.error('Failed to delete news:', error);
+            setError(error.response?.data?.message || 'فشل في حذف الخبر');
             setIsDeleting(false);
         }
     };
 
     const toggleNewsStatus = async (newsId, currentStatus) => {
         try {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
 
-            // In a real implementation, update via API
-            // await apiClient.patch(`/news/${newsId}`, { status: newStatus });
+            await apiClient.patch(`/news/status/${newsId}/API`,
+                { status: newStatus },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
 
-            // Update local state
-            const updatedNews = news.map(item =>
-                item.id === newsId ? { ...item, status: newStatus } : item
-            );
-
-            setNews(updatedNews);
-
-            // Update stats
-            const active = updatedNews.filter(item => item.status === 'active').length;
-            const total = updatedNews.length;
-            setStats({
-                active,
-                inactive: total - active,
-                total
-            });
+            // Invalidate and refetch news data
+            await queryClient.invalidateQueries(['news']);
         } catch (error) {
             console.error('Failed to update news status:', error);
+            setError('فشل في تحديث حالة الخبر');
         }
     };
 

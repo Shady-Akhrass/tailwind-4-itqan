@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import AdminNavbar from './AdminNavbar';
 import AdminSidebar from './AdminSidebar';
 
 const AdminLayout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const location = useLocation();
+    const navigate = useNavigate();
+
+    // Redirect to login if not authenticated
+    useEffect(() => {
+        const isLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+        if (!isLoggedIn) {
+            navigate('/admin/login', { replace: true });
+        }
+    }, [navigate]);
 
     // Close sidebar on mobile when navigating
     useEffect(() => {
@@ -68,4 +77,4 @@ const AdminLayout = () => {
     );
 };
 
-export default AdminLayout; 
+export default AdminLayout;

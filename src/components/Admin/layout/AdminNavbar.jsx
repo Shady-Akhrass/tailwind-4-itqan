@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import {
     Bell,
     LogOut,
@@ -14,6 +15,17 @@ import {
 const AdminNavbar = ({ toggleSidebar, isOpen }) => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
+    const { logout, user } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate('/admin/login');
+        } catch (error) {
+            console.error('Logout failed:', error);
+        }
+    };
 
     const toggleDarkMode = () => {
         setDarkMode(!darkMode);
@@ -39,16 +51,16 @@ const AdminNavbar = ({ toggleSidebar, isOpen }) => {
             {/* Right section: Actions and profile */}
             <div className="flex items-center">
                 {/* Dark mode toggle */}
-                <button
+                {/* <button
                     onClick={toggleDarkMode}
                     className="p-2 rounded-full hover:bg-gray-100 transition-colors relative"
                     aria-label="Toggle dark mode"
                 >
                     {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-                </button>
+                </button> */}
 
                 {/* Notifications */}
-                <button
+                {/* <button
                     className="p-2 rounded-full hover:bg-gray-100 transition-colors mx-2 relative"
                     aria-label="Notifications"
                 >
@@ -56,7 +68,7 @@ const AdminNavbar = ({ toggleSidebar, isOpen }) => {
                     <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">
                         3
                     </span>
-                </button>
+                </button> */}
 
                 {/* User dropdown */}
                 <div className="relative">
@@ -64,12 +76,13 @@ const AdminNavbar = ({ toggleSidebar, isOpen }) => {
                         onClick={() => setDropdownOpen(!dropdownOpen)}
                         className="flex items-center space-x-2 cursor-pointer focus:outline-none"
                     >
-                        <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white">
-                            <User size={20} />
-                        </div>
+                        
                         <div className="hidden md:block text-right">
-                            <p className="text-sm font-medium">المسؤول</p>
-                            <p className="text-xs text-gray-500">مدير النظام</p>
+                            <p className="text-sm font-medium">{user?.name || 'المسؤول'}</p>
+                            <p className="text-xs text-gray-500">{user?.role || 'مدير النظام'}</p>
+                        </div>
+                        <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white ml-10">
+                            <User size={20} />
                         </div>
                     </button>
 
@@ -78,26 +91,26 @@ const AdminNavbar = ({ toggleSidebar, isOpen }) => {
                         <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 text-right">
                             <Link
                                 to="/admin/profile"
-                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                             >
                                 <User size={16} className="ml-2" />
                                 الملف الشخصي
                             </Link>
                             <Link
                                 to="/admin/settings"
-                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                             >
                                 <Settings size={16} className="ml-2" />
                                 الإعدادات
                             </Link>
                             <div className="border-t border-gray-100 my-1"></div>
-                            <Link
-                                to="/admin/logout"
-                                className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
+                            <button
+                                onClick={handleLogout}
+                                className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                             >
                                 <LogOut size={16} className="ml-2" />
                                 تسجيل الخروج
-                            </Link>
+                            </button>
                         </div>
                     )}
                 </div>
@@ -106,4 +119,4 @@ const AdminNavbar = ({ toggleSidebar, isOpen }) => {
     );
 };
 
-export default AdminNavbar; 
+export default AdminNavbar;
