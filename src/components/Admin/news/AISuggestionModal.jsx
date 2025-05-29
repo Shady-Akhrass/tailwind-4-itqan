@@ -36,15 +36,14 @@ const AISuggestionModal = ({
             let imageContext = '';
             if (mainImage || subImage) {
                 imageContext = '\n\nملاحظة: الخبر يتضمن صورًا توضيحية تتعلق بالمحتوى.';
-            }
-
-            return `بصفتك محرر محترف باللغة العربية، اقترح 3 عناوين إخبارية قوية ومميزة للمحتوى التالي. 
+            } return `بصفتك محرر محترف باللغة العربية، اقترح 3 عناوين إخبارية قوية ومميزة للمحتوى التالي. 
             يجب أن تكون العناوين:
             - موجزة (لا تزيد عن 10-15 كلمة)
             - جذابة تثير اهتمام القارئ
             - دقيقة لغويًا وخالية من الأخطاء النحوية والإملائية
             - تعكس المحتوى الرئيسي للخبر بوضوح
             - متنوعة في الأسلوب (استفهامي، إخباري، وصفي)
+            - تجنب تمامًا استخدام علامات النجمة (**) في بداية ونهاية العناوين
 
             **المحتوى:**
             \`\`\`
@@ -72,14 +71,17 @@ const AISuggestionModal = ({
             4. استخدم لغة سلسة وواضحة ومباشرة
             5. تأكد من خلو النص من الأخطاء النحوية والإملائية
             6. اجعل النص أكثر حيوية وتشويقًا مع الحفاظ على الطابع الإخباري المهني
-            
+            7. حفظ النص بشكل واضح ومنطقي
+            8. تجنب استخدام العبارات المكررة أو الزائدة
+            9. اجعل النص جذابًا للقارئ مع الحفاظ على الموضوعية
+            10. تأكد من أن النص المحسّن يعكس المحتوى الأصلي بشكل دقيق
             **النص الأصلي:**
             \`\`\`
             ${initialContent}
             \`\`\`
             ${imageContext}
             
-            قدم النص المحسّن فقط بدون أي مقدمات أو تعليقات.`;
+            قدم النص المحسّن فقط بدون أي مقدمات أو تعليقات .`;
         }
         return null;
     };
@@ -145,18 +147,21 @@ const AISuggestionModal = ({
 
             if (!text) {
                 throw new Error('لم يتم تلقي استجابة نصية من الذكاء الاصطناعي.');
-            }
-
-            if (action === 'suggestTitle') {
+            } if (action === 'suggestTitle') {
                 const suggestedTitles = text.split('\n')
-                    .map(title => title.trim())
+                    .map(title => title.trim().replace(/^\*\*|\*\*$/g, ''))  // Remove ** from start and end
                     .filter(title => title.length > 0 && !title.startsWith('-') && !title.match(/^\d+\./));
 
                 const uniqueTitles = [...new Set(suggestedTitles)].slice(0, 3);
                 setResults(uniqueTitles.length > 0 ? uniqueTitles : ['لم يتم العثور على اقتراحات للعناوين.']);
             } else if (action === 'enhanceContent') {
                 let cleanedText = text.trim()
+                    // Remove النص المحسّن: or المحتوى المحسن: from the beginning
                     .replace(/^(النص المحسّن:|المحتوى المحسن:)/i, '')
+                    // Remove ** from start and end of lines
+                    .replace(/^\*\*|\*\*$/gm, '')
+                    // Replace **heading:** style with just heading:
+                    .replace(/\*\*(.*?)\*\*:/g, '$1:')
                     .trim();
 
                 setResults([cleanedText]);

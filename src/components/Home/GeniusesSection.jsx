@@ -203,7 +203,7 @@ const GeniusesSection = memo(() => {
             <meta property="og:title" content="نوابغ دار الإتقان" />
             <meta property="og:description" content="تعرف على نوابغ دار الإتقان للتعليم والتدريب" />
 
-            <section className="relative py-8 md:py-16 min-h-screen overflow-hidden" ref={sectionRef}>
+            <section className="relative py-8 md:py-16 min-h-screen overflow-hidden" ref={sectionRef} dir='rtl'>
                 <div className="container mx-auto text-center relative px-4">
                     <h2 className="text-3xl md:text-4xl font-bold text-center  text-gray-800">نوابغ الإتقان</h2>
                     <div className="w-24 h-1  my-4 bg-gradient-to-r from-green-500 to-emerald-600 dark:from-yellow-400 dark:to-yellow-600 mx-auto rounded-full" />
@@ -213,18 +213,20 @@ const GeniusesSection = memo(() => {
                             whileHover={{ scale: 1.02 }}
                             className="flex flex-col md:flex-row items-stretch rounded-xl border-2 shadow-lg overflow-hidden w-full min-h-[500px] cursor-pointer"
                         >
-                            <div className="relative w-full md:w-2/5 h-48 md:h-auto overflow-hidden">
-                                <img
-                                    src={checkApiUrl(currentGenius?.image)}
-                                    alt={currentGenius?.name}
-                                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                                    width="800"
-                                    height="600"
-                                    loading="lazy"
-                                    onError={(e) => {
-                                        e.target.src = '/placeholder-genius.jpg';
-                                    }}
-                                />
+
+
+
+                            <div className="flex-grow p-4 md:p-10">
+                                <div className="flex flex-col items-center justify-center h-full max-w-lg mx-auto">
+                                    <h3 className="font-semibold text-xl md:text-3xl mb-4">{currentGenius?.name}</h3>
+                                    <p className="text-base md:text-lg text-gray-600 leading-relaxed line-clamp-3 mb-6">
+                                        {currentGenius?.details}
+                                    </p>
+                                    <div className="w-32 md:w-48 bg-green-600 text-white text-center py-3 md:py-4 rounded-lg 
+                                        hover:bg-green-700 transition-colors text-sm md:text-base">
+                                        عرض القصة
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="flex md:flex-col justify-center gap-3 p-4 md:px-8">
@@ -242,17 +244,18 @@ const GeniusesSection = memo(() => {
                                 ))}
                             </div>
 
-                            <div className="flex-grow p-4 md:p-10">
-                                <div className="flex flex-col items-center justify-center h-full max-w-lg mx-auto">
-                                    <h3 className="font-semibold text-xl md:text-3xl mb-4">{currentGenius?.name}</h3>
-                                    <p className="text-base md:text-lg text-gray-600 leading-relaxed line-clamp-3 mb-6">
-                                        {currentGenius?.details}
-                                    </p>
-                                    <div className="w-32 md:w-48 bg-green-600 text-white text-center py-3 md:py-4 rounded-lg 
-                                        hover:bg-green-700 transition-colors text-sm md:text-base">
-                                        عرض القصة
-                                    </div>
-                                </div>
+                            <div className="relative w-full md:w-2/5 h-48 md:h-auto overflow-hidden">
+                                <img
+                                    src={checkApiUrl(currentGenius?.image)}
+                                    alt={currentGenius?.name}
+                                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                                    width="800"
+                                    height="600"
+                                    loading="lazy"
+                                    onError={(e) => {
+                                        e.target.src = '/placeholder-genius.jpg';
+                                    }}
+                                />
                             </div>
                         </motion.div>
                     </div>

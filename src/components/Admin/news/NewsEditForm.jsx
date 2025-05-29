@@ -36,6 +36,7 @@ const NewsEditForm = () => {
     const [saving, setSaving] = useState(false);
     const [success, setSuccess] = useState(false);
     const [loadingRetry, setLoadingRetry] = useState(false);
+    const [submitting, setSubmitting] = useState(false); // Add this state for tracking form submission
     const [showDebugInfo, setShowDebugInfo] = useState(false);
     const [apiTestResult, setApiTestResult] = useState(null);
     const [apiTestError, setApiTestError] = useState(null);
@@ -101,6 +102,11 @@ const NewsEditForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        // Prevent multiple submissions
+        if (submitting) {
+            return;
+        }
+
         // Validate required fields
         if (!formData.title?.trim()) {
             setError('حقل العنوان مطلوب');
@@ -112,6 +118,7 @@ const NewsEditForm = () => {
             return;
         }
 
+        setSubmitting(true);
         setSaving(true);
         setError(null);
 
@@ -234,7 +241,9 @@ const NewsEditForm = () => {
                 // Handle generic error
                 setError('فشل في حفظ الخبر. يرجى المحاولة مرة أخرى');
             }
+        } finally {
             setSaving(false);
+            setSubmitting(false);
         }
     };
 
@@ -630,10 +639,10 @@ const NewsEditForm = () => {
                 <div className="flex justify-center">
                     <button
                         type="submit"
-                        disabled={saving || success}
-                        className={`px-6 py-3 rounded-lg text-white flex items-center gap-2 ${saving || success
-                            ? 'bg-gray-400 cursor-not-allowed'
-                            : 'bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50'
+                        disabled={saving || success || submitting}
+                        className={`px-6 py-3 rounded-lg text-white flex items-center gap-2 ${saving || success || submitting
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50'
                             }`}
                     >
                         {saving ? (

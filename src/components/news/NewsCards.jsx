@@ -105,7 +105,7 @@ const NewsCard = React.memo(({ newsItem, generateDetailsUrl, newsRef }) => {
                         dir='rtl'
                     >
                         <span>عرض الخبر كامل</span>
-                        
+
                     </motion.div>
                 </div>
             </Link>

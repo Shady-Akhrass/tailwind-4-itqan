@@ -141,7 +141,7 @@ const ProjectsSection = () => {
             <meta property="og:title" content="مشاريع باحاجة لدعمكم" />
             <meta property="og:description" content="مشاريع باحاجة لدعمكم" />
 
-            <section className="relative py-24 min-h-screen overflow-hidden">
+            <section className="relative py-24 min-h-screen overflow-hidden" dir='rtl'>
                 <div className="container mx-auto relative px-4">
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}
@@ -265,20 +265,7 @@ const ProjectsSection = () => {
                                     </button>
 
                                     <div className="grid md:grid-cols-2 h-full">
-                                        <div className="order-2 md:order-1 h-full p-6 md:p-8 overflow-y-auto flex items-center justify-center">
-                                            <motion.img
-                                                src={checkApiUrl(getImageUrl(selectedProject.image))}
-                                                alt={selectedProject.title}
-                                                className="w-full h-auto max-h-full object-cover rounded-lg"
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                transition={{ delay: 0.2 }}
-                                                loading="lazy"
-                                                onError={(e) => {
-                                                    e.target.src = '/placeholder-project.jpg';
-                                                }}
-                                            />
-                                        </div>
+                                        
                                         <div className="order-1 md:order-2 p-6 md:p-8 overflow-y-auto flex flex-col items-center justify-center" dir="rtl">
                                             <div className="flex flex-col items-center justify-center h-full max-w-lg w-full mx-auto">
                                                 <motion.h2
@@ -306,6 +293,20 @@ const ProjectsSection = () => {
                                                     دعم المشروع
                                                 </motion.button>
                                             </div>
+                                        </div>
+                                        <div className="order-2 md:order-1 h-full p-6 md:p-8 overflow-y-auto flex items-center justify-center">
+                                            <motion.img
+                                                src={checkApiUrl(getImageUrl(selectedProject.image))}
+                                                alt={selectedProject.title}
+                                                className="w-full h-auto max-h-full object-cover rounded-lg"
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                transition={{ delay: 0.2 }}
+                                                loading="lazy"
+                                                onError={(e) => {
+                                                    e.target.src = '/placeholder-project.jpg';
+                                                }}
+                                            />
                                         </div>
                                     </div>
                                 </div>

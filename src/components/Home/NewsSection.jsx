@@ -215,7 +215,7 @@ const NewsSection = () => {
     }
 
     return (
-        <section className="py-4 sm:py-8">
+        <section className="py-4 sm:py-8" dir='rtl'>
             <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
                 <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-800">
                     أخبار الدار

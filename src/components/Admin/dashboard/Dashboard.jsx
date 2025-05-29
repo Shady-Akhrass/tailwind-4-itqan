@@ -11,8 +11,10 @@ import {
     Calendar,
     Gift,
     Award,
-    Layers
+    Layers,
+    UserCheck
 } from 'lucide-react';
+import { useVisitorsCount } from '../../../api/queries';
 
 // Stat card component
 const StatCard = ({ icon: Icon, title, value, trend, color }) => {
@@ -21,7 +23,7 @@ const StatCard = ({ icon: Icon, title, value, trend, color }) => {
             <div className="flex justify-between items-start">
                 <div>
                     <p className="text-gray-500 text-sm mb-1">{title}</p>
-                    <h3 className="text-2xl font-bold">{value}</h3>
+                    <h3 className="text-2xl font-bold text-gray-900">{value}</h3>
                     <p className={`text-sm mt-2 ${trend > 0 ? 'text-green-500' : 'text-red-500'}`}>
                         {trend > 0 ? `+${trend}%` : `${trend}%`} منذ الشهر الماضي
                     </p>
@@ -48,8 +50,17 @@ const QuickAccessCard = ({ icon: Icon, title, description, to, color }) => {
 };
 
 const Dashboard = () => {
+    const { data: visitorsCount, isLoading: isLoadingVisitors } = useVisitorsCount();
+
     // Sample data for demonstration
     const stats = [
+        {
+            icon: UserCheck,
+            title: 'إجمالي الزوار',
+            value: isLoadingVisitors ? '...' : visitorsCount?.visitors?.toString() || '0',
+            trend: 100,
+            color: 'bg-indigo-500'
+        },
         {
             icon: Users,
             title: 'المستخدمين النشطين',
@@ -180,4 +191,4 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard; 
+export default Dashboard;

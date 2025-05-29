@@ -276,7 +276,7 @@ const NewsManagement = () => {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center text-sm text-gray-500">
                                                 <Eye size={14} className="ml-1" />
-                                                {item.views || 0}
+                                                {item.visitors || 0}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">

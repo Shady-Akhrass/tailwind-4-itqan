@@ -85,13 +85,26 @@ const SoundSection = () => {
     if (!soundData) return null;
 
     return (
-        <section className="relative py-16 min-h-screen overflow-hidden">
+        <section className="relative py-16 min-h-screen overflow-hidden" dir='rtl'>
             <div className="container mx-auto text-center relative px-4">
                 <h2 className="text-4xl font-bold text-center  text-gray-800">{soundData.title}</h2>
                 <div className="w-24 h-1  my-4 bg-gradient-to-r from-green-500 to-emerald-600 dark:from-yellow-400 dark:to-yellow-600 mx-auto rounded-full" />
 
                 <div className="flex items-center justify-between w-full">
                     <div className="flex items-stretch rounded-xl border-2 border-gray-300 shadow-sm overflow-hidden w-full min-h-[450px]">
+                        {/* Right - Image */}
+                        <div className="w-2/5 flex items-center justify-center p-8 ">
+                            <img
+                                src={soundCloud}
+                                alt="SoundCloud App"
+                                className="max-w-full h-auto max-h-[450px] object-contain rounded-2xl shadow-md"
+                                loading="lazy"
+                                onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = soundCloud;
+                                }}
+                            />
+                        </div>
                         {/* Left - SoundCloud Player */}
                         <div className="w-3/5 flex-shrink-0">
                             <iframe
@@ -106,19 +119,7 @@ const SoundSection = () => {
                             />
                         </div>
 
-                        {/* Right - Image */}
-                        <div className="w-2/5 flex items-center justify-center p-8 ">
-                            <img
-                                src={soundCloud}
-                                alt="SoundCloud App"
-                                className="max-w-full h-auto max-h-[450px] object-contain rounded-2xl shadow-md"
-                                loading="lazy"
-                                onError={(e) => {
-                                    e.target.onerror = null;
-                                    e.target.src = soundCloud;
-                                }}
-                            />
-                        </div>
+
                     </div>
                 </div>
             </div>

@@ -131,13 +131,20 @@ const YouTubeSectionContent = memo(() => {
     }
 
     return (
-        <div className="py-4 px-4 sm:px-6 lg:px-8 lg:mx-32">
+        <div className="py-4 px-4 sm:px-6 lg:px-8 lg:mx-32" dir='rtl'>
             <h2 className="text-2xl md:text-4xl font-bold text-center text-gray-800">
                 المكتبة المرئية
             </h2>
             <div className="w-24 h-1 my-4 bg-gradient-to-r from-green-500 to-emerald-600 dark:from-yellow-400 dark:to-yellow-600 mx-auto rounded-full" />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6" style={{ minHeight: '400px', contain: 'layout' }}>
+                <div className="md:col-span-2 aspect-video">
+                    <VideoFrame
+                        className="w-full h-full rounded-lg"
+                        src={videos[0].main}
+                        title="Main Video"
+                    />
+                </div>
                 <div className="md:col-span-1 grid grid-rows-2 gap-4 h-full">
                     <div className="w-full aspect-video" style={{ contain: 'layout' }}>
                         <VideoFrame
@@ -154,13 +161,7 @@ const YouTubeSectionContent = memo(() => {
                         />
                     </div>
                 </div>
-                <div className="md:col-span-2 aspect-video">
-                    <VideoFrame
-                        className="w-full h-full rounded-lg"
-                        src={videos[0].main}
-                        title="Main Video"
-                    />
-                </div>
+
             </div>
         </div>
     );

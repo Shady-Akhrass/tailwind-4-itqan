@@ -23,9 +23,9 @@ const ImageSlider = () => {
     };
 
     const settings = {
-        dots: true,
+        dots: false,
         infinite: true,
-        speed: 1000,
+        speed: 10000,
         slidesToShow: 1,
         slidesToScroll: 1,
         autoplay: true,
@@ -60,7 +60,7 @@ const ImageSlider = () => {
     if (error) {
         return (
             <div className="w-full aspect-[4/3] md:aspect-[16/9] flex items-center justify-center bg-gray-100">
-                <p className="text-red-500">حدث خطأ في تحميل الصور</p>
+                <p className="text-red-500">Error loading images</p>
             </div>
         );
     }
@@ -68,7 +68,7 @@ const ImageSlider = () => {
     if (!isLoading && images.length === 0) {
         return (
             <div className="w-full aspect-[4/3] md:aspect-[16/9] flex items-center justify-center bg-gray-100">
-                <p className="text-gray-500">لا توجد صور متاحة</p>
+                <p className="text-gray-500">No images available</p>
             </div>
         );
     }

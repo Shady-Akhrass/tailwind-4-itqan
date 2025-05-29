@@ -144,6 +144,7 @@ export const queryKeys = {
     newsDetails: (identifier) => ['news', identifier],
     speech: ['speech'],
     clues: ['clues'],
+    visitors: ['visitors'],
 };
 
 // API Calls with enhanced error handling
@@ -274,6 +275,20 @@ export const useClues = () => {
     });
 };
 
+export const useIncrementVisitors = () => {
+    return useMutation({
+        mutationFn: async () => {
+            try {
+                const { data } = await apiClient.post('/home/visitors/API');
+                return data;
+            } catch (error) {
+                console.error('Error incrementing visitors:', error);
+                throw error;
+            }
+        }
+    });
+};
+
 export const useContactForm = () => {
     return useMutation({
         mutationFn: async (formData) => {
@@ -285,6 +300,30 @@ export const useContactForm = () => {
                 throw error;
             }
         },
+    });
+};
+
+export const useVisitorsCount = () => {
+    return useQuery({
+        queryKey: queryKeys.visitors,
+        queryFn: async () => {
+            try {
+                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                const { data } = await apiClient.get('/home/visitors/API', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                return data;
+            } catch (error) {
+                console.error('Error fetching visitors count:', error);
+                throw error;
+            }
+        },
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        retry: 3,
+        retryDelay: (attemptIndex) => Math.min(1000 * (2 ** attemptIndex), 10000),
     });
 };
 
