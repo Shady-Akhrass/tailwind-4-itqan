@@ -19,7 +19,7 @@ const SectionsManagement = () => {
     const [showConfirmDelete, setShowConfirmDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(5);
+    const [itemsPerPage] = useState(10);
     const [showModal, setShowModal] = useState(false);
     const [modalMode, setModalMode] = useState('add');
     const [currentSection, setCurrentSection] = useState({ name: '', description: '' });
@@ -226,9 +226,8 @@ const SectionsManagement = () => {
                         headers: {
                             'Content-Type': 'multipart/form-data',
                             'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Authorization': `Bearer ${token}`,
-                            'X-HTTP-Method-Override': 'PATCH'
+                            'X-Requested-Method': 'PATCH',
+                            'Authorization': `Bearer ${token}`
                         },
                         withCredentials: true
                     });
@@ -245,9 +244,8 @@ const SectionsManagement = () => {
                         headers: {
                             'Content-Type': 'multipart/form-data',
                             'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Authorization': `Bearer ${token}`,
-                            'X-HTTP-Method-Override': 'PATCH'
+                            'X-Requested-Method': 'PATCH',
+                            'Authorization': `Bearer ${token}`
                         },
                         withCredentials: true
                     });
@@ -654,63 +652,43 @@ const SectionsManagement = () => {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                    <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                        <div className="flex-1 flex justify-between sm:hidden">
+                    <div className="flex justify-center mt-6">
+                        <nav className="flex items-center gap-1">
                             <button
-                                onClick={() => setCurrentPage(currentPage - 1)}
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                 disabled={currentPage === 1}
-                                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                                className={`p-2 rounded-md ${currentPage === 1
+                                    ? 'text-gray-400 cursor-not-allowed'
+                                    : 'text-gray-700 hover:bg-gray-100'
+                                    }`}
                             >
-                                السابق
+                                <ChevronRight size={20} />
                             </button>
+
+                            {[...Array(totalPages)].map((_, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => setCurrentPage(i + 1)}
+                                    className={`w-10 h-10 rounded-md ${currentPage === i + 1
+                                        ? 'bg-green-500 text-white'
+                                        : 'bg-white text-gray-700 hover:bg-gray-100'
+                                        }`}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+
                             <button
-                                onClick={() => setCurrentPage(currentPage + 1)}
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                                 disabled={currentPage === totalPages}
-                                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                                className={`p-2 rounded-md ${currentPage === totalPages
+                                    ? 'text-gray-400 cursor-not-allowed'
+                                    : 'text-gray-700 hover:bg-gray-100'
+                                    }`}
                             >
-                                التالي
+                                <ChevronLeft size={20} />
                             </button>
-                        </div>
-                        <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                            <div>
-                                <p className="text-sm text-gray-700">
-                                    عرض <span className="font-medium">{indexOfFirstItem + 1}</span> إلى{' '}
-                                    <span className="font-medium">
-                                        {Math.min(indexOfLastItem, filteredSections.length)}
-                                    </span>{' '}
-                                    من <span className="font-medium">{filteredSections.length}</span> قسم
-                                </p>
-                            </div>
-                            <div>
-                                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                                    <button
-                                        onClick={() => setCurrentPage(currentPage - 1)}
-                                        disabled={currentPage === 1}
-                                        className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'}`}
-                                    >
-                                        <span className="sr-only">Previous</span>
-                                        <ChevronRight className="h-5 w-5" />
-                                    </button>
-                                    {[...Array(totalPages)].map((_, i) => (
-                                        <button
-                                            key={i}
-                                            onClick={() => setCurrentPage(i + 1)}
-                                            className={`relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${currentPage === i + 1 ? 'bg-green-50 text-green-600 z-10 border-green-500' : 'text-gray-500 hover:bg-gray-50'}`}
-                                        >
-                                            {i + 1}
-                                        </button>
-                                    ))}
-                                    <button
-                                        onClick={() => setCurrentPage(currentPage + 1)}
-                                        disabled={currentPage === totalPages}
-                                        className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'}`}
-                                    >
-                                        <span className="sr-only">Next</span>
-                                        <ChevronLeft className="h-5 w-5" />
-                                    </button>
-                                </nav>
-                            </div>
-                        </div>
+                        </nav>
                     </div>
                 )}
             </div>

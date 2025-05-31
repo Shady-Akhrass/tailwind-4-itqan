@@ -145,6 +145,7 @@ export const queryKeys = {
     speech: ['speech'],
     clues: ['clues'],
     visitors: ['visitors'],
+    sections: ['sections'],
 };
 
 // API Calls with enhanced error handling
@@ -318,6 +319,24 @@ export const useVisitorsCount = () => {
                 return data;
             } catch (error) {
                 console.error('Error fetching visitors count:', error);
+                throw error;
+            }
+        },
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        retry: 3,
+        retryDelay: (attemptIndex) => Math.min(1000 * (2 ** attemptIndex), 10000),
+    });
+};
+
+export const useSections = () => {
+    return useQuery({
+        queryKey: queryKeys.sections,
+        queryFn: async () => {
+            try {
+                const { data } = await apiClient.get('get/sections/API');
+                return processImageUrls(data);
+            } catch (error) {
+                console.error('Error fetching sections:', error);
                 throw error;
             }
         },

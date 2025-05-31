@@ -4,6 +4,7 @@ import { FaBars, FaTimes, FaChevronDown, FaHome, FaInfoCircle, FaBookOpen, FaNew
 import { SearchIcon } from 'lucide-react';
 import Logo from '../../../public/logo.png';
 import toast from 'react-hot-toast';
+import { useSections } from '../../api/queries';
 
 const Navbar = () => {
     const [navOpen, setNavOpen] = useState(false);
@@ -16,6 +17,7 @@ const Navbar = () => {
     const [isDarkMode, setIsDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
     const location = useLocation();
     const navigate = useNavigate();
+    const { data: sectionsData } = useSections();
 
     // Memoize menu items since they're static
     const menuItems = useMemo(() => [
@@ -49,6 +51,16 @@ const Navbar = () => {
             ]
         },
         {
+            icon: <FaBookOpen className="text-xl" />,
+            label: 'الأقسام',
+            id: 'sections',
+            submenu: sectionsData?.map(section => ({
+                label: section.name,
+                link: `/section/${section.id}`,
+                id: `section-${section.id}`
+            })) || []
+        },
+        {
             icon: <FaNewspaper className="text-xl" />,
             label: 'قسم الأخبار',
             link: '/news',
@@ -66,7 +78,7 @@ const Navbar = () => {
             link: '/contact-us',
             id: 'contact-us'
         }
-    ], []);
+    ], [sectionsData]);
 
     // Debounced scroll handler
     const handleScroll = useCallback(() => {

@@ -10,6 +10,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import PrivateRoute from './components/Admin/private/privateRoute';
 import { AuthProvider } from './components/Admin/context/AuthContext';
+import DynamicSection from './components/ItqnSections/DynamicSection';
 
 const Header = lazy(() => import('./components/Base/Header'));
 const AllNewsPage = lazy(() => import('./components/news/NewsCards'));
@@ -35,12 +36,13 @@ const Dashboard = lazy(() => import('./components/Admin/dashboard/Dashboard'));
 const NewsManagement = lazy(() => import('./components/Admin/news/NewsManagement'));
 const NewsEditForm = lazy(() => import('./components/Admin/news/NewsEditForm'));
 const HomeManagement = lazy(() => import('./components/Admin/home/HomeManagement'));
+const DonateManagement = lazy(() => import('./components/Admin/home/DonateManagement'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, 
-      gcTime: 1000 * 60 * 60 * 24, 
+      staleTime: 1000 * 60 * 5,
+      gcTime: 1000 * 60 * 60 * 24,
       refetchOnWindowFocus: false,
       retry: 1,
     },
@@ -82,6 +84,7 @@ function Layout() {
           <Route path="/branche" element={<Branches />} />
           <Route path="/vision" element={<Mission />} />
           <Route path="/director" element={<Navigate to="/home" replace />} />
+          <Route path="/section/:id" element={<DynamicSection />} />
 
           {/* Admin routes */}
           <Route path="/admin/login" element={<Login />} />
@@ -96,6 +99,7 @@ function Layout() {
             <Route path="sections" element={<SectionsManagement />} />
             <Route path="sections/edit/:sectionId" element={<EditSection />} />
             <Route path="home" element={<HomeManagement />} />
+            <Route path="donate" element={<DonateManagement />} />
             <Route path="news">
               <Route index element={<NewsManagement />} />
               <Route path="new" element={<NewsEditForm />} />

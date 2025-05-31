@@ -38,6 +38,7 @@ const AdminSidebar = ({ isOpen }) => {
         { to: '/admin/home', icon: Home, label: 'الصفحة الرئيسية' },
         { to: '/admin/sections', icon: Layers, label: 'الأقسام' },
         { to: '/admin/news', icon: FileText, label: 'الأخبار' },
+        { to: '/admin/donate', icon: Gift, label: 'التبرعات' },
         { to: '/admin/gallery', icon: Image, label: 'معرض الصور' },
         { to: '/admin/users', icon: Users, label: 'المستخدمين' },
         { to: '/admin/messages', icon: MessageSquare, label: 'الرسائل' },
