@@ -4,7 +4,6 @@ import { apiClient } from '../../../api/queries';
 import { Edit, Trash2, Plus, Search, AlertTriangle, CheckCircle, Loader2, ChevronLeft, ChevronRight, Filter, X } from 'lucide-react';
 import axios from 'axios';
 import SectionModal from './AddSectionModal';
-import DeleteConfirmationModal from './DeleteConfirmationModal';
 import toast, { Toaster } from 'react-hot-toast';
 
 const SectionsManagement = () => {
@@ -16,7 +15,8 @@ const SectionsManagement = () => {
     const [newSectionsError, setNewSectionsError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [stats, setStats] = useState({ active: 0, inactive: 0, total: 0 });
-    const [showConfirmDelete, setShowConfirmDelete] = useState(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [sectionToDelete, setSectionToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
@@ -180,7 +180,7 @@ const SectionsManagement = () => {
 
             // Add required fields
             formData.append('name', currentSection.name.trim());
-            formData.append('description', currentSection.description.trim());
+            formData.append('description', currentSection.description ? currentSection.description.trim() : '');
 
             // Handle images for both add and edit modes
             if (modalMode === 'edit') {
@@ -330,18 +330,32 @@ const SectionsManagement = () => {
         setShowModal(true);
     };
 
-    const handleDeleteSection = async (sectionId, isNewSection = false) => {
+    const handleDeleteClick = (section, isNewSection = false) => {
+        setSectionToDelete({ ...section, isNewSection });
+        setShowDeleteModal(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!sectionToDelete) return;
+
         setIsDeleting(true);
         const toastId = toast.loading('جاري حذف القسم...');
         try {
-            if (isNewSection) {
-                await axios.delete(`/api/sections/${sectionId}`);
-                const updatedNewSections = newSections.filter(section => section.id !== sectionId);
+            if (sectionToDelete.isNewSection) {
+                await axios.delete(`/api/sections/${sectionToDelete.id}/API`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    withCredentials: true
+                });
+                const updatedNewSections = newSections.filter(section => section.id !== sectionToDelete.id);
                 setNewSections(updatedNewSections);
                 toast.success('تم حذف القسم بنجاح', { id: toastId });
             } else {
                 const updatedSections = sections.map(section =>
-                    section.id === sectionId
+                    section.id === sectionToDelete.id
                         ? { ...section, hasData: false, dataCount: 0 }
                         : section
                 );
@@ -357,7 +371,8 @@ const SectionsManagement = () => {
                 toast.success('تم حذف القسم بنجاح', { id: toastId });
             }
 
-            setShowConfirmDelete(null);
+            setShowDeleteModal(false);
+            setSectionToDelete(null);
         } catch (error) {
             console.error('Failed to delete section:', error);
             const errorMessage = error.response?.data?.message || 'حدث خطأ أثناء حذف القسم. يرجى المحاولة مرة أخرى.';
@@ -562,7 +577,7 @@ const SectionsManagement = () => {
                                             <Edit className="w-5 h-5" />
                                         </button>
                                         <button
-                                            onClick={() => setShowConfirmDelete({ id: section.id, isNew: false })}
+                                            onClick={() => handleDeleteClick(section, false)}
                                             className="text-red-600 hover:text-red-900"
                                         >
                                             <Trash2 className="w-5 h-5" />
@@ -611,7 +626,9 @@ const SectionsManagement = () => {
                                             </div>
                                             <div className="mr-4">
                                                 <div className="text-sm font-medium text-gray-900">{section.name}</div>
-                                                <div className="text-sm text-gray-500">{section.description}</div>
+                                                <div className="text-sm text-gray-500 truncate max-w-[200px]">
+                                                    {section.description}
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
@@ -637,7 +654,7 @@ const SectionsManagement = () => {
                                                 <Edit className="w-5 h-5" />
                                             </button>
                                             <button
-                                                onClick={() => setShowConfirmDelete({ id: section.id, isNew: true })}
+                                                onClick={() => handleDeleteClick(section, true)}
                                                 className="text-red-600 hover:text-red-900"
                                             >
                                                 <Trash2 className="w-5 h-5" />
@@ -707,12 +724,43 @@ const SectionsManagement = () => {
                 mode={modalMode}
             />
 
-            <DeleteConfirmationModal
-                showConfirmDelete={showConfirmDelete}
-                setShowConfirmDelete={setShowConfirmDelete}
-                handleDeleteSection={handleDeleteSection}
-                isDeleting={isDeleting}
-            />
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">تأكيد الحذف</h3>
+                        <p className="text-gray-600 mb-6">
+                            هل أنت متأكد من حذف القسم "{sectionToDelete?.name}"؟ لا يمكن التراجع عن هذا الإجراء.
+                        </p>
+                        <div className="flex justify-end gap-4">
+                            <button
+                                onClick={() => {
+                                    setShowDeleteModal(false);
+                                    setSectionToDelete(null);
+                                }}
+                                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                                disabled={isDeleting}
+                            >
+                                إلغاء
+                            </button>
+                            <button
+                                onClick={handleDeleteConfirm}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                                disabled={isDeleting}
+                            >
+                                {isDeleting ? (
+                                    <div className="flex items-center">
+                                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                        جاري الحذف...
+                                    </div>
+                                ) : (
+                                    'حذف'
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

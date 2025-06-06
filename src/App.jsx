@@ -28,6 +28,7 @@ const ContactSection = lazy(() => import('./components/Contact/ContactSection'))
 const Speech = lazy(() => import('./components/About/Speech'));
 const Branches = lazy(() => import('./components/About/Branches'));
 const Mission = lazy(() => import('./components/About/Mission'));
+const Directors = lazy(() => import('./components/About/Directors'));
 const Login = lazy(() => import('./components/Admin/auth/Login'));
 const SectionsManagement = lazy(() => import('./components/Admin/sections/SectionsManagement'));
 const EditSection = lazy(() => import('./components/Admin/sections/EditSection'));
@@ -37,6 +38,10 @@ const NewsManagement = lazy(() => import('./components/Admin/news/NewsManagement
 const NewsEditForm = lazy(() => import('./components/Admin/news/NewsEditForm'));
 const HomeManagement = lazy(() => import('./components/Admin/home/HomeManagement'));
 const DonateManagement = lazy(() => import('./components/Admin/home/DonateManagement'));
+const GeniusManagement = lazy(() => import('./components/Admin/home/GeniusManagement'));
+const CluesManagement = lazy(() => import('./components/Admin/clues/CluesManagement'));
+const SpeechManagement = lazy(() => import('./components/Admin/speech/SpeechManagment'));
+const DirectorManagement = lazy(() => import('./components/Admin/Director/DirectorManagement'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -83,8 +88,8 @@ function Layout() {
           <Route path="/speech" element={<Speech />} />
           <Route path="/branche" element={<Branches />} />
           <Route path="/vision" element={<Mission />} />
-          <Route path="/director" element={<Navigate to="/home" replace />} />
-          <Route path="/section/:id" element={<DynamicSection />} />
+          <Route path="/director" element={<Directors />} />
+          <Route path="/:title" element={<DynamicSection />} />
 
           {/* Admin routes */}
           <Route path="/admin/login" element={<Login />} />
@@ -100,11 +105,15 @@ function Layout() {
             <Route path="sections/edit/:sectionId" element={<EditSection />} />
             <Route path="home" element={<HomeManagement />} />
             <Route path="donate" element={<DonateManagement />} />
+            <Route path="genius" element={<GeniusManagement />} />
+            <Route path="clues" element={<CluesManagement />} />
+            <Route path="speech" element={<SpeechManagement />} />
             <Route path="news">
               <Route index element={<NewsManagement />} />
               <Route path="new" element={<NewsEditForm />} />
               <Route path="edit/:newsId" element={<NewsEditForm />} />
             </Route>
+            <Route path="directors" element={<DirectorManagement />} />
           </Route>
 
           {/* Catch all route - redirect to home */}

@@ -144,8 +144,10 @@ export const queryKeys = {
     newsDetails: (identifier) => ['news', identifier],
     speech: ['speech'],
     clues: ['clues'],
+    cluesPdf: ['cluesPdf'],
     visitors: ['visitors'],
     sections: ['sections'],
+    genius: ['genius'],
 };
 
 // API Calls with enhanced error handling
@@ -223,6 +225,7 @@ export const useNewsDetails = (identifier) => {
         enabled: !!identifier,
         staleTime: 1000 * 60 * 5,
         retry: 3,
+        retryDelay: (attemptIndex) => Math.min(1000 * (2 ** attemptIndex), 10000),
     });
 };
 
@@ -241,6 +244,7 @@ export const useNewsDetailsById = (id) => {
         enabled: !!id,
         staleTime: 1000 * 60 * 5,
         retry: 3,
+        retryDelay: (attemptIndex) => Math.min(1000 * (2 ** attemptIndex), 10000),
     });
 };
 
@@ -257,6 +261,74 @@ export const useSpeech = () => {
             }
         },
         staleTime: 1000 * 60 * 5,
+        retry: 3,
+        retryDelay: (attemptIndex) => Math.min(1000 * (2 ** attemptIndex), 10000),
+    });
+};
+
+export const useAdminSpeech = () => {
+    return useQuery({
+        queryKey: queryKeys.speech,
+        queryFn: async () => {
+            try {
+                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                const { data } = await apiClient.get('/speech/API', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                return processImageUrls(data);
+            } catch (error) {
+                console.error('Error fetching speech data:', error);
+                throw error;
+            }
+        },
+        staleTime: 1000 * 60 * 5,
+        retry: 3,
+        retryDelay: (attemptIndex) => Math.min(1000 * (2 ** attemptIndex), 10000),
+    });
+};
+
+export const useCreateSpeech = () => {
+    return useMutation({
+        mutationFn: async (formData) => {
+            try {
+                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                const { data } = await apiClient.post('/speech/API', formData, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                return data;
+            } catch (error) {
+                console.error('Error creating speech:', error);
+                throw error;
+            }
+        }
+    });
+};
+
+export const useUpdateSpeech = () => {
+    return useMutation({
+        mutationFn: async ({ id, formData }) => {
+            try {
+                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                const { data } = await apiClient.patch(`/speech/${id}/API`, formData, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                return data;
+            } catch (error) {
+                console.error('Error updating speech:', error);
+                throw error;
+            }
+        }
     });
 };
 
@@ -273,8 +345,144 @@ export const useClues = () => {
             }
         },
         staleTime: 1000 * 60 * 5,
+        retry: 3,
+        retryDelay: (attemptIndex) => Math.min(1000 * (2 ** attemptIndex), 10000),
     });
 };
+
+export const useAdminClues = () => {
+    return useQuery({
+        queryKey: queryKeys.clues,
+        queryFn: async () => {
+            try {
+                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                const { data } = await apiClient.get('/clues/API', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                return processImageUrls(data?.clues || []);
+            } catch (error) {
+                console.error('Error fetching clues:', error);
+                throw error;
+            }
+        },
+        staleTime: 1000 * 60 * 5,
+        retry: 3,
+        retryDelay: (attemptIndex) => Math.min(1000 * (2 ** attemptIndex), 10000),
+    });
+};
+
+export const useCreateClue = () => {
+    return useMutation({
+        mutationFn: async (formData) => {
+            try {
+                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                const { data } = await apiClient.post('/clue/API', formData, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json',
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+                return data;
+            } catch (error) {
+                console.error('Error creating clue:', error);
+                throw error;
+            }
+        }
+    });
+};
+
+export const useUpdateClue = () => {
+    return useMutation({
+        mutationFn: async ({ id, formData }) => {
+            try {
+                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                // Add _method field for Laravel to recognize it as PATCH
+                formData.append('_method', 'PATCH');
+
+                const { data } = await apiClient.post(`/clue/${id}/API`, formData, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json',
+                        'Content-Type': 'multipart/form-data',
+                        'X-HTTP-Method-Override': 'PATCH'
+                    }
+                });
+                return data;
+            } catch (error) {
+                console.error('Error updating clue:', error);
+                throw error;
+            }
+        }
+    });
+};
+
+// export const useCluesPdf = () => {
+//     return useQuery({
+//         queryKey: queryKeys.cluesPdf,
+//         queryFn: async () => {
+//             try {
+//                 const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+//                 const { data } = await apiClient.get('/clue/API', {
+//                     headers: {
+//                         'Authorization': `Bearer ${token}`,
+//                         'Accept': 'application/json'
+//                     }
+//                 });
+//                 return data;
+//             } catch (error) {
+//                 console.error('Error fetching clues PDF:', error);
+//                 throw error;
+//             }
+//         },
+//         staleTime: 1000 * 60 * 5,
+//     });
+// };
+
+// export const useUpdateCluesPdf = () => {
+//     return useMutation({
+//         mutationFn: async (formData) => {
+//             try {
+//                 const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+//                 const { data } = await apiClient.post('/clue/API', formData, {
+//                     headers: {
+//                         'Authorization': `Bearer ${token}`,
+//                         'Accept': 'application/json',
+//                         'Content-Type': 'multipart/form-data'
+//                     }
+//                 });
+//                 return data;
+//             } catch (error) {
+//                 console.error('Error updating clues PDF:', error);
+//                 throw error;
+//             }
+//         }
+//     });
+// };
+
+// export const usePatchCluesPdf = () => {
+//     return useMutation({
+//         mutationFn: async ({ id, formData }) => {
+//             try {
+//                 const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+//                 const { data } = await apiClient.patch(`/clue/${id}/API`, formData, {
+//                     headers: {
+//                         'Authorization': `Bearer ${token}`,
+//                         'Accept': 'application/json',
+//                         'Content-Type': 'multipart/form-data'
+//                     }
+//                 });
+//                 return data;
+//             } catch (error) {
+//                 console.error('Error patching clues PDF:', error);
+//                 throw error;
+//             }
+//         }
+//     });
+// };
 
 export const useIncrementVisitors = () => {
     return useMutation({
@@ -337,6 +545,30 @@ export const useSections = () => {
                 return processImageUrls(data);
             } catch (error) {
                 console.error('Error fetching sections:', error);
+                throw error;
+            }
+        },
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        retry: 3,
+        retryDelay: (attemptIndex) => Math.min(1000 * (2 ** attemptIndex), 10000),
+    });
+};
+
+export const useGeniuses = () => {
+    return useQuery({
+        queryKey: queryKeys.genius,
+        queryFn: async () => {
+            try {
+                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                const { data } = await apiClient.get('/genius/API', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                return processImageUrls(data);
+            } catch (error) {
+                console.error('Error fetching geniuses:', error);
                 throw error;
             }
         },

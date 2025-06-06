@@ -15,7 +15,10 @@ import {
     Layers,
     Award,
     Gift,
-    LayoutDashboard
+    LayoutDashboard,
+    FileQuestion,
+    Mic,
+    UserCog
 } from 'lucide-react';
 
 const SidebarLink = ({ to, icon: Icon, label, active }) => (
@@ -39,17 +42,21 @@ const AdminSidebar = ({ isOpen }) => {
         { to: '/admin/sections', icon: Layers, label: 'الأقسام' },
         { to: '/admin/news', icon: FileText, label: 'الأخبار' },
         { to: '/admin/donate', icon: Gift, label: 'التبرعات' },
-        { to: '/admin/gallery', icon: Image, label: 'معرض الصور' },
-        { to: '/admin/users', icon: Users, label: 'المستخدمين' },
-        { to: '/admin/messages', icon: MessageSquare, label: 'الرسائل' },
+        { to: '/admin/genius', icon: Award, label: 'النوابغ' },
+        { to: '/admin/clues', icon: FileQuestion, label: 'الأدلة' },
+        { to: '/admin/speech', icon: Mic, label: 'كلمة المدير' },
+        { to: '/admin/directors', icon: UserCog, label: 'إدارة مجلس الإدارة' },
+        // { to: '/admin/gallery', icon: Image, label: 'معرض الصور' },
+        // { to: '/admin/users', icon: Users, label: 'المستخدمين' },
+        // { to: '/admin/messages', icon: MessageSquare, label: 'الرسائل' },
     ];
 
     const sectionLinks = [
-        { to: '/admin/sections/memorization', icon: BookOpen, label: 'قسم التحفيظ' },
-        { to: '/admin/sections/courses', icon: Calendar, label: 'قسم الدورات' },
-        { to: '/admin/sections/activities', icon: Activity, label: 'قسم الأنشطة' },
-        { to: '/admin/sections/creative', icon: Gift, label: 'قسم الإبداع' },
-        { to: '/admin/sections/diwan', icon: Award, label: 'قسم الديوان' },
+        // { to: '/admin/sections/memorization', icon: BookOpen, label: 'قسم التحفيظ' },
+        // { to: '/admin/sections/courses', icon: Calendar, label: 'قسم الدورات' },
+        // { to: '/admin/sections/activities', icon: Activity, label: 'قسم الأنشطة' },
+        // { to: '/admin/sections/creative', icon: Gift, label: 'قسم الإبداع' },
+        // { to: '/admin/sections/diwan', icon: Award, label: 'قسم الديوان' },
     ];
 
     // const otherLinks = [
@@ -88,20 +95,7 @@ const AdminSidebar = ({ isOpen }) => {
                     ))}
                 </div>
 
-                {/* Sections Navigation */}
-                <div className="space-y-1">
-                    <h3 className="text-xs uppercase text-gray-500 font-semibold px-4 py-2">الأقسام</h3>
-                    {sectionLinks.map((link) => (
-                        <SidebarLink
-                            key={link.to}
-                            to={link.to}
-                            icon={link.icon}
-                            label={link.label}
-                            active={isLinkActive(link.to)}
-                        />
-                    ))}
-                </div>
-
+               
                 {/* Other Links */}
                 {/* <div className="space-y-1">
                     <h3 className="text-xs uppercase text-gray-500 font-semibold px-4 py-2">إدارة</h3>

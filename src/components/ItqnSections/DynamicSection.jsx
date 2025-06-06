@@ -22,13 +22,16 @@ const carouselStyles = `
 `;
 
 const DynamicSection = () => {
-    const { id } = useParams();
+    const { title } = useParams();
     const [section, setSection] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        apiClient.get(`/sections/${id}/API`)
+        // Decode the URL-encoded title and replace hyphens with spaces
+        const decodedTitle = decodeURIComponent(title).replace(/-/g, ' ');
+
+        apiClient.get(`/sections/${decodedTitle}/API`)
             .then(response => {
                 setSection(response.data);
                 setLoading(false);
@@ -49,7 +52,7 @@ const DynamicSection = () => {
             script.crossOrigin = "anonymous";
             document.body.appendChild(script);
         }
-    }, [id]);
+    }, [title]);
 
     const getMetaDescription = () => {
         if (section?.description) {

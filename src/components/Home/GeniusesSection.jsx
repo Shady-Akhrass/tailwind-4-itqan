@@ -67,7 +67,7 @@ const SkeletonStyles = () => (
 // Memoize the card content component
 const GeniusCardContent = memo(({ genius, isExpanded, onExpand }) => (
     <div className="flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto py-4 md:py-0 space-y-6 md:space-y-8 text-center">
-        <h3 className="font-semibold text-xl md:text-3xl">
+        <h3 className="font-semibold text-xl md:text-3xl text-gray-800 dark:text-white">
             {genius.name}
         </h3>
         <p className={`text-base md:text-lg text-gray-600 leading-relaxed max-w-screen-2xl ${!isExpanded ? 'line-clamp-3' : ''}`}>
@@ -205,7 +205,7 @@ const GeniusesSection = memo(() => {
 
             <section className="relative py-8 md:py-16 min-h-screen overflow-hidden" ref={sectionRef} dir='rtl'>
                 <div className="container mx-auto text-center relative px-4">
-                    <h2 className="text-3xl md:text-4xl font-bold text-center  text-gray-800">نوابغ الإتقان</h2>
+                    <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-800 dark:text-white">نوابغ الإتقان</h2>
                     <div className="w-24 h-1  my-4 bg-gradient-to-r from-green-500 to-emerald-600 dark:from-yellow-400 dark:to-yellow-600 mx-auto rounded-full" />
                     <div className="bg-white flex items-center justify-between w-full">
                         <motion.div
@@ -218,7 +218,7 @@ const GeniusesSection = memo(() => {
 
                             <div className="flex-grow p-4 md:p-10">
                                 <div className="flex flex-col items-center justify-center h-full max-w-lg mx-auto">
-                                    <h3 className="font-semibold text-xl md:text-3xl mb-4">{currentGenius?.name}</h3>
+                                    <h3 className="font-semibold text-xl md:text-3xl mb-4 text-gray-800 dark:text-white">{currentGenius?.name}</h3>
                                     <p className="text-base md:text-lg text-gray-600 leading-relaxed line-clamp-3 mb-6">
                                         {currentGenius?.details}
                                     </p>
@@ -303,7 +303,7 @@ const GeniusesSection = memo(() => {
                                         <div className="order-1 md:order-2 p-6 md:p-8 overflow-y-auto" dir="rtl">
                                             <div className="flex flex-col items-center justify-center h-full max-w-lg mx-auto">
                                                 <motion.h2
-                                                    className="text-2xl md:text-3xl font-bold mb-6 text-gray-800 text-center"
+                                                    className="text-2xl md:text-3xl font-bold mb-6 text-gray-800 dark:text-white text-center"
                                                     initial={{ y: 20, opacity: 0 }}
                                                     animate={{ y: 0, opacity: 1 }}
                                                     transition={{ delay: 0.3 }}

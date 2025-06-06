@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { apiClient } from '../../../api/queries';
 import { Plus, Edit2, Trash2, Loader2, AlertTriangle, CheckCircle, Search, ChevronLeft, ChevronRight, Filter, ToggleLeft, ToggleRight } from 'lucide-react';
-import DonateForm from './DonateForm';
+import GeniusForm from './GeniusForm';
 import DeleteConfirmModal from './DeleteConfirmModal';
 
-const DonateManagement = () => {
-    const [donates, setDonates] = useState([]);
+const GeniusManagement = () => {
+    const [geniuses, setGeniuses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
@@ -16,9 +16,8 @@ const DonateManagement = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
     const [formData, setFormData] = useState({
-        title: '',
+        name: '',
         details: '',
-        date: '',
         image: null,
         status: 'active'
     });
@@ -34,31 +33,31 @@ const DonateManagement = () => {
 
     // Calculate stats
     const stats = {
-        active: donates.filter(d => d.status === 'active').length,
-        inactive: donates.filter(d => d.status === 'inactive').length,
-        total: donates.length
+        active: geniuses.filter(g => g.status === 'active').length,
+        inactive: geniuses.filter(g => g.status === 'inactive').length,
+        total: geniuses.length
     };
 
-    // Fetch donates on component mount
+    // Fetch geniuses on component mount
     useEffect(() => {
-        fetchDonates();
+        fetchGeniuses();
     }, []);
 
-    const fetchDonates = async () => {
+    const fetchGeniuses = async () => {
         try {
             setLoading(true);
             const token = getAuthToken();
-            const response = await apiClient.get('/donate/API', {
+            const response = await apiClient.get('/geniuse/API', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Accept': 'application/json'
                 }
             });
-            setDonates(response.data);
+            setGeniuses(response.data);
             setError(null);
         } catch (err) {
-            setError('فشل في جلب التبرعات');
-            console.error('Error fetching donates:', err);
+            setError('فشل في جلب النوابغ');
+            console.error('Error fetching geniuses:', err);
         } finally {
             setLoading(false);
         }
@@ -74,9 +73,8 @@ const DonateManagement = () => {
         setIsEditing(false);
         setCurrentId(null);
         setFormData({
-            title: '',
+            name: '',
             details: '',
-            date: '',
             image: null,
             status: 'active'
         });
@@ -84,15 +82,14 @@ const DonateManagement = () => {
         setShowModal(true);
     };
 
-    const openEditModal = (donate) => {
+    const openEditModal = (genius) => {
         setIsEditing(true);
-        setCurrentId(donate.id);
+        setCurrentId(genius.id);
         setFormData({
-            title: donate.title,
-            details: donate.details,
-            date: donate.date,
-            image: donate.image,
-            status: donate.status
+            name: genius.name,
+            details: genius.details,
+            image: genius.image,
+            status: genius.status
         });
         setValidationErrors({});
         setShowModal(true);
@@ -101,9 +98,8 @@ const DonateManagement = () => {
     const closeModal = () => {
         setShowModal(false);
         setFormData({
-            title: '',
+            name: '',
             details: '',
-            date: '',
             image: null,
             status: 'active'
         });
@@ -130,8 +126,7 @@ const DonateManagement = () => {
             }
 
             if (isEditing) {
-                // Use POST method with _method=PATCH for reliable FormData handling on backend
-                await apiClient.post(`/donate/${currentId}/API`, formDataToSend, {
+                await apiClient.post(`/geniuse/${currentId}/API`, formDataToSend, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Accept': 'application/json',
@@ -139,9 +134,8 @@ const DonateManagement = () => {
                     }
                 });
             } else {
-                // For new donations (POST), ensure status is 'active' and send directly
                 formDataToSend.set('status', 'active');
-                await apiClient.post('/donate/API', formDataToSend, {
+                await apiClient.post('/geniuse/API', formDataToSend, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Accept': 'application/json',
@@ -152,21 +146,20 @@ const DonateManagement = () => {
 
             setSuccess(true);
             closeModal();
-            fetchDonates();
+            fetchGeniuses();
 
             setTimeout(() => {
                 setSuccess(false);
             }, 3000);
         } catch (err) {
             if (err.response?.data?.errors) {
-                // Handle validation errors
                 setValidationErrors(err.response.data.errors);
                 setError('يرجى تصحيح الأخطاء في النموذج');
             } else {
-                setError('فشل في حفظ التبرع');
+                setError('فشل في حفظ النابغة');
             }
-            console.error('Error saving donate:', err);
-            throw err; // Re-throw to let the form component handle loading state
+            console.error('Error saving genius:', err);
+            throw err;
         }
     };
 
@@ -179,21 +172,21 @@ const DonateManagement = () => {
         setIsDeleting(true);
         try {
             const token = getAuthToken();
-            await apiClient.delete(`/donate/${deletingId}/API`, {
+            await apiClient.delete(`/geniuse/${deletingId}/API`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Accept': 'application/json'
                 }
             });
-            fetchDonates();
+            fetchGeniuses();
             setSuccess(true);
             setShowDeleteModal(false);
             setTimeout(() => {
                 setSuccess(false);
             }, 3000);
         } catch (err) {
-            setError('فشل في حذف التبرع');
-            console.error('Error deleting donate:', err);
+            setError('فشل في حذف النابغة');
+            console.error('Error deleting genius:', err);
         } finally {
             setIsDeleting(false);
             setDeletingId(null);
@@ -210,7 +203,7 @@ const DonateManagement = () => {
             const token = getAuthToken();
             const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
 
-            await apiClient.patch(`/donate/status/${id}/API`,
+            await apiClient.patch(`/geniuse/status/${id}/API`,
                 { status: newStatus },
                 {
                     headers: {
@@ -221,12 +214,11 @@ const DonateManagement = () => {
                 }
             );
 
-            // Update local state
-            setDonates(prevDonates =>
-                prevDonates.map(donate =>
-                    donate.id === id
-                        ? { ...donate, status: newStatus }
-                        : donate
+            setGeniuses(prevGeniuses =>
+                prevGeniuses.map(genius =>
+                    genius.id === id
+                        ? { ...genius, status: newStatus }
+                        : genius
                 )
             );
 
@@ -235,31 +227,31 @@ const DonateManagement = () => {
                 setSuccess(false);
             }, 3000);
         } catch (err) {
-            setError('فشل في تحديث حالة التبرع');
+            setError('فشل في تحديث حالة النابغة');
             console.error('Error updating status:', err);
         }
     };
 
-    // Filter donates based on search term
-    const filteredDonates = donates
-        .filter(donate =>
-            donate.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            donate.details.toLowerCase().includes(searchTerm.toLowerCase())
+    // Filter geniuses based on search term
+    const filteredGeniuses = geniuses
+        .filter(genius =>
+            genius.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            genius.details.toLowerCase().includes(searchTerm.toLowerCase())
         )
-        .sort((a, b) => b.id - a.id); // Sort by ID in descending order (newest first)
+        .sort((a, b) => b.id - a.id);
 
     // Pagination
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = filteredDonates.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(filteredDonates.length / itemsPerPage);
+    const currentItems = filteredGeniuses.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredGeniuses.length / itemsPerPage);
 
     if (loading) {
         return (
             <div className="flex justify-center items-center h-screen">
                 <div className="flex flex-col items-center">
                     <Loader2 className="w-12 h-12 text-green-500 animate-spin" />
-                    <p className="mt-4 text-gray-600">جاري تحميل التبرعات...</p>
+                    <p className="mt-4 text-gray-600">جاري تحميل النوابغ...</p>
                 </div>
             </div>
         );
@@ -273,9 +265,9 @@ const DonateManagement = () => {
                     className="bg-green-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-600 transition-colors shadow-md"
                 >
                     <Plus className="w-5 h-5" />
-                    إضافة تبرع جديد
+                    إضافة نابغة جديد
                 </button>
-                <h1 className="text-3xl font-bold text-gray-800">إدارة التبرعات</h1>
+                <h1 className="text-3xl font-bold text-gray-800">إدارة النوابغ</h1>
             </div>
 
             {/* Stats Cards */}
@@ -283,7 +275,7 @@ const DonateManagement = () => {
                 <div className="bg-white rounded-xl shadow-md p-6 border-r-4 border-green-500">
                     <div className="flex justify-between items-center">
                         <div>
-                            <p className="text-gray-500 text-sm">التبرعات النشطة</p>
+                            <p className="text-gray-500 text-sm">النوابغ النشطين</p>
                             <h3 className="text-2xl font-bold text-gray-800">{stats.active}</h3>
                         </div>
                         <div className="bg-green-100 p-3 rounded-full">
@@ -295,7 +287,7 @@ const DonateManagement = () => {
                 <div className="bg-white rounded-xl shadow-md p-6 border-r-4 border-yellow-500">
                     <div className="flex justify-between items-center">
                         <div>
-                            <p className="text-gray-500 text-sm">التبرعات غير النشطة</p>
+                            <p className="text-gray-500 text-sm">النوابغ غير النشطين</p>
                             <h3 className="text-2xl font-bold text-gray-800">{stats.inactive}</h3>
                         </div>
                         <div className="bg-yellow-100 p-3 rounded-full">
@@ -307,7 +299,7 @@ const DonateManagement = () => {
                 <div className="bg-white rounded-xl shadow-md p-6 border-r-4 border-blue-500">
                     <div className="flex justify-between items-center">
                         <div>
-                            <p className="text-gray-500 text-sm">إجمالي التبرعات</p>
+                            <p className="text-gray-500 text-sm">إجمالي النوابغ</p>
                             <h3 className="text-2xl font-bold text-gray-800">{stats.total}</h3>
                         </div>
                         <div className="bg-blue-100 p-3 rounded-full">
@@ -325,7 +317,7 @@ const DonateManagement = () => {
                 <input
                     type="text"
                     className="block w-full p-4 pr-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-green-500 focus:border-green-500"
-                    placeholder="بحث عن التبرعات..."
+                    placeholder="بحث عن النوابغ..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -351,39 +343,35 @@ const DonateManagement = () => {
                 </div>
             )}
 
-            {/* Donations Table */}
+            {/* Geniuses Table */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]">العنوان</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-[30%]">التفاصيل</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">التاريخ</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]">الصورة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-[25%]">الاسم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-[35%]">التفاصيل</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-[20%]">الصورة</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">الحالة</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {currentItems.map((donate) => (
-                            <tr key={donate.id} className="hover:bg-gray-50">
+                        {currentItems.map((genius) => (
+                            <tr key={genius.id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4">
-                                    <div className="text-sm font-medium text-gray-900 text-right">{donate.title}</div>
+                                    <div className="text-sm font-medium text-gray-900 text-right">{genius.name}</div>
                                 </td>
                                 <td className="px-6 py-4">
                                     <div className="max-w-md text-right">
-                                        <p className="text-sm text-gray-900">{truncateText(donate.details)}</p>
+                                        <p className="text-sm text-gray-900">{truncateText(genius.details)}</p>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <div className="text-sm text-gray-900 text-right">{donate.date}</div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    {donate.image && (
+                                    {genius.image && (
                                         <div className="relative group flex justify-end">
                                             <img
-                                                src={`https://api.ditq.org/storage/${donate.image}`}
-                                                alt={donate.title}
+                                                src={`https://api.ditq.org/storage/${genius.image}`}
+                                                alt={genius.name}
                                                 className="h-16 w-16 object-cover rounded cursor-pointer hover:opacity-75 transition-opacity"
                                             />
                                             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all rounded"></div>
@@ -393,13 +381,13 @@ const DonateManagement = () => {
                                 <td className="px-6 py-4">
                                     <div className="flex justify-end">
                                         <button
-                                            onClick={() => handleStatusToggle(donate.id, donate.status)}
-                                            className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium transition-colors ${donate.status === 'active'
+                                            onClick={() => handleStatusToggle(genius.id, genius.status)}
+                                            className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium transition-colors ${genius.status === 'active'
                                                 ? 'bg-green-100 text-green-800 hover:bg-green-200'
                                                 : 'bg-red-100 text-red-800 hover:bg-red-200'
                                                 }`}
                                         >
-                                            {donate.status === 'active' ? (
+                                            {genius.status === 'active' ? (
                                                 <>
                                                     <ToggleRight className="w-4 h-4" />
                                                     نشط
@@ -416,14 +404,14 @@ const DonateManagement = () => {
                                 <td className="px-6 py-4">
                                     <div className="flex space-x-2 justify-end">
                                         <button
-                                            onClick={() => openEditModal(donate)}
-                                            className="text-indigo-600 hover:text-indigo-900"
+                                            onClick={() => openEditModal(genius)}
+                                            className="p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-lg transition-colors"
                                         >
                                             <Edit2 className="w-5 h-5" />
                                         </button>
                                         <button
-                                            onClick={() => handleDeleteClick(donate.id)}
-                                            className="text-red-600 hover:text-red-900"
+                                            onClick={() => handleDeleteClick(genius.id)}
+                                            className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
                                         >
                                             <Trash2 className="w-5 h-5" />
                                         </button>
@@ -478,7 +466,7 @@ const DonateManagement = () => {
             </div>
 
             {/* Form Modal */}
-            <DonateForm
+            <GeniusForm
                 isOpen={showModal}
                 onClose={closeModal}
                 onSubmit={handleSubmit}
@@ -499,4 +487,4 @@ const DonateManagement = () => {
     );
 };
 
-export default DonateManagement; 
+export default GeniusManagement; 

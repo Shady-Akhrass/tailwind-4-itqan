@@ -38,25 +38,14 @@ const Navbar = () => {
                 { label: 'الفروع', link: '/branche', id: 'branche' }
             ]
         },
+
         {
             icon: <FaBookOpen className="text-xl" />,
             label: 'أقسام الدار',
-            id: 'departments',
-            submenu: [
-                { label: 'قسم تحفيظ القرآن الكريم', link: '/memorization', id: 'memorization' },
-                { label: 'قسم الدورات والتجويد والأسانيد', link: '/course', id: 'course' },
-                { label: 'قسم ديوان الحفاظ', link: '/diwan', id: 'diwan' },
-                { label: 'قسم التربية والمواهب الإبداعية', link: '/creative', id: 'creative' },
-                { label: 'قسم الأنشطة والمسابقة', link: '/activity', id: 'activity' }
-            ]
-        },
-        {
-            icon: <FaBookOpen className="text-xl" />,
-            label: 'الأقسام',
             id: 'sections',
             submenu: sectionsData?.map(section => ({
                 label: section.name,
-                link: `/section/${section.id}`,
+                link: `/${encodeURIComponent(section.name.replace(/\s+/g, '-'))}`,
                 id: `section-${section.id}`
             })) || []
         },
