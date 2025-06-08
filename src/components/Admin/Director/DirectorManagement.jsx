@@ -124,7 +124,7 @@ const AdminDirectorsPage = () => {
 
             if (response.data.success) {
                 setSuccess(true);
-                setSuccessMessage(modalMode === 'create' ? 'تم إضافة الموظق بنجاح' : 'تم تحديث بيانات الموظق بنجاح');
+                setSuccessMessage(modalMode === 'create' ? 'تم إضافة الموظف بنجاح' : 'تم تحديث بيانات الموظف بنجاح');
                 fetchDirectors();
                 fetchTreeData();
                 handleCloseModal();
@@ -160,7 +160,7 @@ const AdminDirectorsPage = () => {
 
             if (response.data.success) {
                 setSuccess(true);
-                setSuccessMessage('تم حذف الموظق بنجاح');
+                setSuccessMessage('تم حذف الموظف بنجاح');
                 fetchDirectors();
                 fetchTreeData();
                 setShowDeleteModal(null);
@@ -172,7 +172,7 @@ const AdminDirectorsPage = () => {
                 setError('فشل الحذف');
             }
         } catch (error) {
-            setError('خطأ في حذف الموظق');
+            setError('خطأ في حذف الموظف');
         } finally {
             setIsDeleting(false);
         }
@@ -235,7 +235,7 @@ const AdminDirectorsPage = () => {
     // Handle modal success
     const handleModalSuccess = (mode) => {
         setSuccess(true);
-        setSuccessMessage(mode === 'create' ? 'تم إضافة الموظق بنجاح' : 'تم تحديث بيانات الموظق بنجاح');
+        setSuccessMessage(mode === 'create' ? 'تم إضافة الموظف بنجاح' : 'تم تحديث بيانات الموظف بنجاح');
         setTimeout(() => {
             setSuccess(false);
             setSuccessMessage('');
@@ -262,7 +262,7 @@ const AdminDirectorsPage = () => {
                         className="bg-green-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-600 transition-colors shadow-md"
                     >
                         <Plus className="w-5 h-5" />
-                        إضافة موظق جديد
+                        إضافة موظف جديد
                     </button>
                     <h1 className="text-3xl font-bold text-gray-800">إدارة مجلس الإدارة</h1>
                 </div>

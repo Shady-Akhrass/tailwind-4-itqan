@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronRight, Users, MapPin, Mail, Phone, Award, Star } from 'lucide-react';
 import { apiClient } from '../../api/queries';
+import { checkApiUrl } from '../../hooks/checkApiUrl';
 
 const Directors = () => {
     const [treeData, setTreeData] = useState([]);
@@ -95,7 +96,7 @@ const Directors = () => {
                         {node.image ? (
                             <div className={`relative w-full h-full rounded-full overflow-hidden border-4 border-white shadow-xl group-hover:shadow-${colors.accent}-500/50 transition-all duration-500 transform group-hover:scale-110`}>
                                 <img
-                                    src={node.image}
+                                    src={checkApiUrl(node.image)}
                                     alt={node.name}
                                     className="w-full h-full object-cover"
                                 />

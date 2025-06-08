@@ -3,6 +3,19 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 
 const API_BASE_URL = '/api';
 
+// Debounce utility function
+const debounce = (func, wait) => {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+};
+
 // Create axios instance with optimized configuration
 export const apiClient = axios.create({
     baseURL: API_BASE_URL,
@@ -13,7 +26,12 @@ export const apiClient = axios.create({
     },
 });
 
-// Optimized retry logic
+// Debounced request function
+const debouncedRequest = debounce(async (config) => {
+    return apiClient(config);
+}, 300); // 300ms debounce delay
+
+// Optimized retry logic with debouncing
 apiClient.interceptors.response.use(
     response => {
         // Cache successful responses in memory
@@ -57,19 +75,30 @@ apiClient.interceptors.response.use(
             config._isRetry = true;
             config._retryCount = (config._retryCount || 0) + 1;
 
-            if (config._retryCount >= 2) { // Reduced retry count
+            if (config._retryCount >= 2) {
                 return Promise.reject(error);
             }
 
-            const delay = Math.min(1000 * (2 ** config._retryCount), 5000); // Reduced max delay
+            const delay = Math.min(1000 * (2 ** config._retryCount), 5000);
             await new Promise(resolve => setTimeout(resolve, delay));
 
-            return apiClient(config);
+            // Use debounced request for retries
+            return debouncedRequest(config);
         }
 
         return Promise.reject(error);
     }
 );
+
+// Override the request method to use debouncing
+const originalRequest = apiClient.request;
+apiClient.request = function (config) {
+    // Don't debounce POST, PUT, DELETE requests
+    if (config.method !== 'get') {
+        return originalRequest.call(this, config);
+    }
+    return debouncedRequest(config);
+};
 
 /**
  * Get properly formatted image URL based on environment

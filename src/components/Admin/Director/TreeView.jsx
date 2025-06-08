@@ -1,4 +1,5 @@
 import { Users, Edit, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { checkApiUrl } from '../../../hooks/checkApiUrl';
 
 const TreeView = ({ treeData, expandedNodes, toggleNode, handleOpenModal, handleDelete }) => {
     const renderTreeNode = (node) => {
@@ -9,7 +10,7 @@ const TreeView = ({ treeData, expandedNodes, toggleNode, handleOpenModal, handle
             <div key={node.id} className="flex flex-col items-center">
                 <div className="flex items-center bg-white p-3 rounded-lg shadow-sm mb-2">
                     {node.image ? (
-                        <img src={node.image} alt={node.name} className="w-10 h-10 rounded-full ml-3 object-cover" />
+                        <img src={checkApiUrl(node.image)} alt={node.name} className="w-10 h-10 rounded-full ml-3 object-cover" />
                     ) : (
                         <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center ml-3">
                             <Users size={20} className="text-gray-600" />

@@ -1,4 +1,5 @@
 import { Users, Edit, Trash2 } from 'lucide-react';
+import { checkApiUrl } from '../../../hooks/checkApiUrl';
 
 const TableView = ({ currentItems, handleOpenModal, handleDelete }) => {
     return (
@@ -33,7 +34,7 @@ const TableView = ({ currentItems, handleOpenModal, handleDelete }) => {
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center">
                                         {director.image ? (
-                                            <img src={director.image} alt={director.name} className="w-10 h-10 rounded-full ml-3 object-cover" />
+                                            <img src={checkApiUrl(director.image)} alt={director.name} className="w-10 h-10 rounded-full ml-3 object-cover" />
                                         ) : (
                                             <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center ml-3">
                                                 <Users size={20} className="text-gray-600" />

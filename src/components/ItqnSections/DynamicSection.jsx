@@ -1,24 +1,37 @@
-import React, { useEffect, useState } from 'react';
-import { apiClient } from '../../api/queries';
+import React, { useEffect, useState, Suspense } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Carousel } from 'react-responsive-carousel';
 import { Home, ChevronLeft, Facebook } from 'lucide-react';
 import 'react-responsive-carousel/lib/styles/carousel.min.css';
+import { apiClient } from '../../api/queries';
 import SectionSkeleton from '../Skeleton/SectionSkeleton';
 
+// A custom hook to manage the Facebook SDK script. This keeps the component clean.
+const useFacebookSDK = () => {
+    useEffect(() => {
+        if (window.FB) {
+            window.FB.XFBML.parse();
+        } else {
+            const script = document.createElement('script');
+            script.src = "https://connect.facebook.net/ar_AR/sdk.js#xfbml=1&version=v19.0";
+            script.async = true;
+            script.defer = true;
+            script.crossOrigin = "anonymous";
+            document.body.appendChild(script);
+
+            script.onload = () => {
+                if (window.FB) {
+                    window.FB.XFBML.parse();
+                }
+            };
+        }
+    }, []);
+};
+
 const carouselStyles = `
-  .carousel .control-dots .dot {
-    background: #22c55e !important;
-    box-shadow: none !important;
-    width: 10px !important;
-    height: 10px !important;
-  }
-  .carousel .control-dots .dot.selected {
-    background: #16a34a !important;
-  }
-  .carousel .slide {
-    transition: opacity 0.5s ease-in-out !important;
-  }
+  .carousel .control-dots .dot { background: #22c55e !important; box-shadow: none !important; width: 10px !important; height: 10px !important; }
+  .carousel .control-dots .dot.selected { background: #16a34a !important; }
+  .carousel .slide { transition: opacity 0.5s ease-in-out !important; }
 `;
 
 const DynamicSection = () => {
@@ -27,8 +40,9 @@ const DynamicSection = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    useFacebookSDK(); // Load the Facebook SDK
+
     useEffect(() => {
-        // Decode the URL-encoded title and replace hyphens with spaces
         const decodedTitle = decodeURIComponent(title).replace(/-/g, ' ');
 
         apiClient.get(`/sections/${decodedTitle}/API`)
@@ -38,40 +52,20 @@ const DynamicSection = () => {
             })
             .catch(error => {
                 console.error('There was an error fetching the section content!', error);
-                setError('Failed to load section content');
+                setError('Failed to load section content. Please try again later.');
                 setLoading(false);
             });
-
-        if (window.FB) {
-            window.FB.XFBML.parse();
-        } else {
-            const script = document.createElement('script');
-            script.src = "https://connect.facebook.net/ar_AR/sdk.js#xfbml=1&version=v18.0";
-            script.async = true;
-            script.defer = true;
-            script.crossOrigin = "anonymous";
-            document.body.appendChild(script);
-        }
     }, [title]);
 
-    const getMetaDescription = () => {
-        if (section?.description) {
-            return section.description.substring(0, 160) + '...';
-        }
-        return `${section?.name || 'Section'} - دار الإتقان`;
-    };
-
-    // Function to get all images from the section
-    const getSectionImages = () => {
-        if (!section) return [];
-
+    // Helper function to get all valid images from the section object
+    const getSectionImages = (sec) => {
+        if (!sec) return [];
         const images = [];
         for (let i = 1; i <= 5; i++) {
-            const imageKey = `image${i}`;
-            if (section[imageKey]) {
+            if (sec[`image${i}`]) {
                 images.push({
                     id: i,
-                    image: section[imageKey]
+                    url: `https://api.ditq.org/storage/${sec[`image${i}`]}`
                 });
             }
         }
@@ -79,103 +73,160 @@ const DynamicSection = () => {
     };
 
     if (loading) return <SectionSkeleton />;
-    if (error) return <div>{error}</div>;
-    if (!section) return <div>No section content found</div>;
+    if (error) return <div className="text-center py-40 text-red-500">{error}</div>;
+    if (!section) return <div className="text-center py-40">No section content found.</div>;
 
-    const metaDescription = getMetaDescription();
-    const sectionImages = getSectionImages();
+    // --- SEO Variables ---
+    const pageUrl = `https://www.ditq.org/sections/${title}`; // Use your actual domain
+    const metaDescription = section.description ? section.description.substring(0, 160) : `Learn about ${section.name} at دار الإتقان.`;
+    const sectionImages = getSectionImages(section);
+    const primaryImage = sectionImages.length > 0 ? sectionImages[0].url : 'https://www.ditq.org/default-image.jpg'; // Have a default image
+
+    // --- Structured Data (JSON-LD) ---
+    const articleSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        'mainEntityOfPage': {
+            '@type': 'WebPage',
+            '@id': pageUrl,
+        },
+        'headline': section.name,
+        'description': metaDescription,
+        'image': sectionImages.map(img => img.url), // Provide all images to Google
+        'author': {
+            '@type': 'Organization',
+            'name': 'دار الإتقان',
+        },
+        'publisher': {
+            '@type': 'Organization',
+            'name': 'دار الإتقان',
+            'logo': {
+                '@type': 'ImageObject',
+                'url': 'https://www.ditq.org/logo.png', // URL to your logo
+            },
+        },
+        // If you have datePublished/dateModified in your API, add them here
+        // "datePublished": "2025-06-07T08:00:00+03:00",
+        // "dateModified": "2025-06-07T09:30:00+03:00"
+    };
+
+    const breadcrumbSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        'itemListElement': [
+            {
+                '@type': 'ListItem',
+                'position': 1,
+                'name': 'الرئيسية', // Home
+                'item': 'https://www.ditq.org/', // URL to your home page
+            },
+            {
+                '@type': 'ListItem',
+                'position': 2,
+                'name': section.name,
+                'item': pageUrl,
+            },
+        ],
+    };
 
     return (
-        <div className="min-h-screen py-24 px-4 sm:px-6 lg:px-8">
-            <title>{section.name} - دار الإتقان</title>
+        <>
+            {/* React 19+ Head Management: All these tags are automatically moved to the <head> */}
+            <title>{`${section.name} - دار الإتقان`}</title>
             <meta name="description" content={metaDescription} />
-            <meta name="keywords" content={`${section.name}, دار الإتقان`} />
-            <meta property="og:title" content={`${section.name} - دار الإتقان`} />
-            <meta property="og:description" content={metaDescription} />
+            <meta name="keywords" content={`${section.name}, دار الإتقان, قرآن, تعليم`} />
+            <link rel="canonical" href={pageUrl} />
             <style>{carouselStyles}</style>
 
-            {/* Navigation Path */}
-            <div className="max-w-7xl mx-auto mb-6" dir="rtl">
-                <nav className="flex items-center text-gray-600 text-sm">
-                    <Link to="/" className="flex items-center hover:text-green-600">
-                        <Home className="w-4 h-4 ml-1" />
-                        الرئيسية
-                    </Link>
-                    <ChevronLeft className="w-4 h-4 mx-2" />
-                    <span className="text-green-600">
-                        {section.name}
-                    </span>
-                </nav>
-            </div>
+            {/* Open Graph Tags (for Facebook, LinkedIn, etc.) */}
+            <meta property="og:title" content={`${section.name} - دار الإتقان`} />
+            <meta property="og:description" content={metaDescription} />
+            <meta property="og:url" content={pageUrl} />
+            <meta property="og:image" content={primaryImage} />
+            <meta property="og:type" content="article" />
+            <meta property="og:site_name" content="دار الإتقان" />
 
-            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
-                {/* Facebook Section */}
-                <div className="lg:col-span-1 order-2 lg:order-1">
-                    <div className="sticky top-4">
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-                            <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">آخر المنشورات</h2>
-                                    <Facebook className="w-5 h-5 text-blue-600" />
+            {/* Twitter Card Tags */}
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:title" content={`${section.name} - دار الإتقان`} />
+            <meta name="twitter:description" content={metaDescription} />
+            <meta name="twitter:image" content={primaryImage} />
+
+            {/* Structured Data Scripts */}
+            <script type="application/ld+json">{JSON.stringify(articleSchema)}</script>
+            <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
+
+            <div className="min-h-screen py-24 px-4 sm:px-6 lg:px-8">
+                {/* Navigation Path */}
+                <div className="max-w-7xl mx-auto mb-6" dir="rtl">
+                    <nav className="flex items-center text-gray-600 text-sm">
+                        <Link to="/" className="flex items-center hover:text-green-600">
+                            <Home className="w-4 h-4 ml-1" />
+                            الرئيسية
+                        </Link>
+                        <ChevronLeft className="w-4 h-4 mx-2" />
+                        <span className="text-green-600">{section.name}</span>
+                    </nav>
+                </div>
+
+                <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    {/* Facebook Section */}
+                    <aside className="lg:col-span-1 order-2 lg:order-1">
+                        <div className="sticky top-24"> {/* Adjusted sticky top */}
+                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+                                <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+                                    <div className="flex items-center justify-between">
+                                        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">آخر المنشورات</h2>
+                                        <Facebook className="w-5 h-5 text-blue-600" />
+                                    </div>
+                                </div>
+                                <div className="p-4 bg-white">
+                                    <div id="fb-root"></div>
+                                    <div
+                                        className="fb-page"
+                                        data-href="https://www.facebook.com/dar.etqan.gaza"
+                                        data-tabs="timeline"
+                                        data-width="450"
+                                        data-height="500"
+                                        data-small-header="true"
+                                        data-adapt-container-width="true"
+                                        data-hide-cover="false"
+                                        data-show-facepile="false"
+                                    ></div>
                                 </div>
                             </div>
-                            <div className="p-4 bg-white overflow-hidden">
-                                <div id="fb-root"></div>
-                                <div
-                                    className="fb-page"
-                                    data-href="https://www.facebook.com/dar.etqan.gaza"
-                                    data-tabs="timeline"
-                                    data-width="450"
-                                    data-height="500"
-                                    data-small-header="true"
-                                    data-adapt-container-width="true"
-                                    data-hide-cover="false"
-                                    data-show-facepile="false"
-                                ></div>
+                        </div>
+                    </aside>
+
+                    {/* Main Section Content */}
+                    <main className="lg:col-span-3 order-1 lg:order-2">
+                        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                            <h1 className="text-3xl font-bold p-6 text-center">{section.name}</h1>
+                            {sectionImages.length > 0 && (
+                                <Carousel showThumbs={false} showStatus={false} infiniteLoop useKeyboardArrows autoPlay interval={5000} className="aspect-video">
+                                    {sectionImages.map(image => (
+                                        <div key={image.id} className="relative aspect-video">
+                                            <img
+                                                src={image.url}
+                                                // More descriptive alt text for better accessibility and SEO
+                                                alt={`${section.name} - صورة ${image.id}`}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    ))}
+                                </Carousel>
+                            )}
+                            <div className="p-6">
+                                <p className="text-gray-800 text-right leading-relaxed whitespace-pre-line">
+                                    {section.description}
+                                </p>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                {/* Section Content */}
-                <div className="lg:col-span-3 order-1 lg:order-2">
-                    <h2 className="text-3xl font-bold mb-8 text-center">{section.name}</h2>
-                    <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
-                        {sectionImages.length > 0 && (
-                            <Carousel
-                                showThumbs={false}
-                                showStatus={false}
-                                infiniteLoop
-                                useKeyboardArrows
-                                autoPlay
-                                interval={5000}
-                                transitionTime={500}
-                                stopOnHover
-                                swipeable
-                                emulateTouch
-                                className="aspect-video"
-                            >
-                                {sectionImages.map(image => (
-                                    <div key={image.id} className="relative aspect-video">
-                                        <img
-                                            src={`https://api.ditq.org/storage/${image.image}`}
-                                            alt={section.name}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    </div>
-                                ))}
-                            </Carousel>
-                        )}
-                        <div className="p-6">
-                            <p className="text-gray-800 text-right leading-relaxed">
-                                {section.description}
-                            </p>
-                        </div>
-                    </div>
+                    </main>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 
-export default DynamicSection; 
+export default DynamicSection;
