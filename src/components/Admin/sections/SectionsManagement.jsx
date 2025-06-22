@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { apiClient } from '../../../api/queries';
 import { Edit, Trash2, Plus, Search, AlertTriangle, CheckCircle, Loader2, ChevronLeft, ChevronRight, Filter, X } from 'lucide-react';
-import axios from 'axios';
 import SectionModal from './AddSectionModal';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -214,7 +213,7 @@ const SectionsManagement = () => {
             let response;
             if (modalMode === 'add') {
                 // Add new section using POST
-                response = await axios.post('/api/sections/API', formData, {
+                response = await apiClient.post('/sections/API', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                         'Accept': 'application/json',
@@ -232,7 +231,7 @@ const SectionsManagement = () => {
                 if (currentSection.isNewSection) {
                     // Edit new section
                     formData.append('_method', 'PATCH');
-                    response = await axios.post(`/api/sections/${currentSection.id}/API`, formData, {
+                    response = await apiClient.post(`/sections/${currentSection.id}/API`, formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data',
                             'Accept': 'application/json',
@@ -250,7 +249,7 @@ const SectionsManagement = () => {
                 } else {
                     // Edit old section
                     formData.append('_method', 'PATCH');
-                    response = await axios.post(`/api/sections/${currentSection.id}/API`, formData, {
+                    response = await apiClient.post(`/sections/${currentSection.id}/API`, formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data',
                             'Accept': 'application/json',
@@ -352,7 +351,7 @@ const SectionsManagement = () => {
         const toastId = toast.loading('جاري حذف القسم...');
         try {
             if (sectionToDelete.isNewSection) {
-                await axios.delete(`/api/sections/${sectionToDelete.id}/API`, {
+                await apiClient.delete(`/sections/${sectionToDelete.id}/API`, {
                     headers: {
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
