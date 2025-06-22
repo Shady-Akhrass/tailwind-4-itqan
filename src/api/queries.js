@@ -26,6 +26,20 @@ export const apiClient = axios.create({
     },
 });
 
+// Automatically attach Authorization header from localStorage or sessionStorage
+apiClient.interceptors.request.use(
+    config => {
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        if (token) {
+            // Ensure headers exist before assignment
+            config.headers = config.headers || {};
+            config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        return config;
+    },
+    error => Promise.reject(error)
+);
+
 // Debounced request function
 const debouncedRequest = debounce(async (config) => {
     return apiClient(config);

@@ -28,20 +28,20 @@ const SectionsManagement = () => {
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [imagePreview, setImagePreview] = useState([]);
 
-    const sectionsData = [
-        { id: 'memorization', name: 'قسم التحفيظ', endpoint: '/memorization/API', icon: '📖' },
-        { id: 'courses', name: 'قسم الدورات', endpoint: '/course/API', icon: '🎓' },
-        { id: 'activities', name: 'قسم الأنشطة', endpoint: '/activity/API', icon: '🎪' },
-        { id: 'creative', name: 'قسم الإبداع', endpoint: '/creative/API', icon: '🎨' },
-        { id: 'diwan', name: 'قسم الديوان', endpoint: '/diwan/API', icon: '📝' }
-    ];
+    // const sectionsData = [
+    //     { id: 'memorization', name: 'قسم التحفيظ', endpoint: '/memorization/API', icon: '📖' },
+    //     { id: 'courses', name: 'قسم الدورات', endpoint: '/course/API', icon: '🎓' },
+    //     { id: 'activities', name: 'قسم الأنشطة', endpoint: '/activity/API', icon: '🎪' },
+    //     { id: 'creative', name: 'قسم الإبداع', endpoint: '/creative/API', icon: '🎨' },
+    //     { id: 'diwan', name: 'قسم الديوان', endpoint: '/diwan/API', icon: '📝' }
+    // ];
 
     const fetchNewSections = async () => {
         setNewSectionsLoading(true);
         setNewSectionsError(null);
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('/api/sections/API', {
+            const response = await apiClient.get('/sections/API', {
                 headers: {
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
@@ -58,57 +58,67 @@ const SectionsManagement = () => {
             );
         } finally {
             setNewSectionsLoading(false);
+            setLoading(false);
         }
     };
 
     useEffect(() => {
         fetchNewSections();
-        const fetchSections = async () => {
-            try {
-                const sectionsWithData = await Promise.all(
-                    sectionsData.map(async (section) => {
-                        try {
-                            const response = await apiClient.get(section.endpoint);
-                            return {
-                                ...section,
-                                hasData: response.data && response.data.length > 0,
-                                dataCount: response.data?.length || 0,
-                                lastUpdated: new Date().toISOString(),
-                                status: 'active'
-                            };
-                        } catch (error) {
-                            console.error(`Error fetching ${section.name}:`, error);
-                            return {
-                                ...section,
-                                hasData: false,
-                                dataCount: 0,
-                                lastUpdated: null,
-                                status: 'active'
-                            };
-                        }
-                    })
-                );
+        // const fetchSections = async () => {
+        //     try {
+        //         const sectionsWithData = await Promise.all(
+        //             sectionsData.map(async (section) => {
+        //                 try {
+        //                     const response = await apiClient.get(section.endpoint);
+        //                     return {
+        //                         ...section,
+        //                         hasData: response.data && response.data.length > 0,
+        //                         dataCount: response.data?.length || 0,
+        //                         lastUpdated: new Date().toISOString(),
+        //                         status: 'active'
+        //                     };
+        //                 } catch (error) {
+        //                     console.error(`Error fetching ${section.name}:`, error);
+        //                     return {
+        //                         ...section,
+        //                         hasData: false,
+        //                         dataCount: 0,
+        //                         lastUpdated: null,
+        //                         status: 'active'
+        //                     };
+        //                 }
+        //             })
+        //         );
 
-                // Calculate stats
-                const active = sectionsWithData.filter(s => s.status === 'active').length;
-                const total = sectionsWithData.length;
+        //         // Calculate stats
+        //         const active = sectionsWithData.filter(s => s.status === 'active').length;
+        //         const total = sectionsWithData.length;
 
-                setStats({
-                    active,
-                    inactive: total - active,
-                    total
-                });
+        //         setStats({
+        //             active,
+        //             inactive: total - active,
+        //             total
+        //         });
 
-                setSections(sectionsWithData);
-                setLoading(false);
-            } catch (error) {
-                setError('Failed to load sections data');
-                setLoading(false);
-            }
-        };
+        //         setSections(sectionsWithData);
+        //         setLoading(false);
+        //     } catch (error) {
+        //         setError('Failed to load sections data');
+        //         setLoading(false);
+        //     }
+        // };
 
-        fetchSections();
+        // fetchSections();
     }, []);
+
+    // Recalculate stats whenever the list of sections changes
+    useEffect(() => {
+        const total = newSections.length;
+        const active = newSections.filter(
+            (s) => s.status === 1 || s.is_active === 1 || s.is_active === true || s.active === 1 || s.active === true
+        ).length;
+        setStats({ active, inactive: total - active, total });
+    }, [newSections]);
 
     const handleFileChange = (e) => {
         const files = Array.from(e.target.files);
