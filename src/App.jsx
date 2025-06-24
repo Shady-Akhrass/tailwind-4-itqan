@@ -15,11 +15,6 @@ import DynamicSection from './components/ItqnSections/DynamicSection';
 const Header = lazy(() => import('./components/Base/Header'));
 const AllNewsPage = lazy(() => import('./components/news/NewsCards'));
 const NewsDetails = lazy(() => import('./components/news/NewsDetails'));
-const ActivitiesSection = lazy(() => import('./components/ItqnSections/ActivitiesSection'));
-const DiwanSection = lazy(() => import('./components/ItqnSections/DiwanSection'));
-const CoursesSection = lazy(() => import('./components/ItqnSections/CoursesSection'));
-const MemorizationSection = lazy(() => import('./components/ItqnSections/MemorizationSection'));
-const CreativeSection = lazy(() => import('./components/ItqnSections/CreativeSection'));
 const Footer = lazy(() => import('./components/Base/Footer'));
 const Home = lazy(() => import('./components/Home/Home'));
 const FloatingButtons = lazy(() => import('./components/Home/FloatingButtons'));
@@ -78,11 +73,6 @@ function Layout() {
           <Route path="/news" element={<AllNewsPage />} />
           <Route path="/news/:title/details" element={<NewsDetails />} />
           <Route path="/news/:id/details" element={<NewsDetails />} />
-          <Route path="/activity" element={<ActivitiesSection />} />
-          <Route path="/diwan" element={<DiwanSection />} />
-          <Route path="/course" element={<CoursesSection />} />
-          <Route path="/memorization" element={<MemorizationSection />} />
-          <Route path="/creative" element={<CreativeSection />} />
           <Route path="/clues" element={<Clues />} />
           <Route path="/contact-us" element={<ContactSection />} />
           <Route path="/speech" element={<Speech />} />
