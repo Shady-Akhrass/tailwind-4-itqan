@@ -150,7 +150,7 @@ const SpeechManagement = () => {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 mt-20">
             <div className="flex justify-between items-center mb-6">
                 <div>
                     {!speech ? (

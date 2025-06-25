@@ -26,6 +26,8 @@ const SectionsManagement = () => {
     const [formError, setFormError] = useState(null);
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [imagePreview, setImagePreview] = useState([]);
+    const [success, setSuccess] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
 
     // const sectionsData = [
     //     { id: 'memorization', name: 'قسم التحفيظ', endpoint: '/memorization/API', icon: '📖' },
@@ -110,14 +112,20 @@ const SectionsManagement = () => {
         // fetchSections();
     }, []);
 
-    // Recalculate stats whenever the list of sections changes
+    // Recalculate stats whenever the list of sections or newSections changes
     useEffect(() => {
-        const total = newSections.length;
-        const active = newSections.filter(
-            (s) => s.status === 1 || s.is_active === 1 || s.is_active === true || s.active === 1 || s.active === true
+        // Combine both old and new sections for stats
+        const allSections = [
+            ...sections,
+            ...newSections
+        ];
+        const total = allSections.length;
+        const active = allSections.filter(
+            (s) => s.status === 1 || s.is_active === 1 || s.is_active === true || s.active === 1 || s.active === true || s.status === 'active'
         ).length;
-        setStats({ active, inactive: total - active, total });
-    }, [newSections]);
+        const inactive = Math.max(0, total - active); // Ensure inactive is never negative
+        setStats({ active, inactive, total });
+    }, [sections, newSections]);
 
     const handleFileChange = (e) => {
         const files = Array.from(e.target.files);
@@ -176,43 +184,39 @@ const SectionsManagement = () => {
         setShowModal(true);
     };
 
+    // After add/edit/delete, always refetch new sections from the API
+    const refetchNewSections = async () => {
+        await fetchNewSections();
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
         setFormError(null);
-
-        const toastId = toast.loading(modalMode === 'add' ? 'جاري إضافة القسم...' : 'جاري تحديث القسم...');
+        setError(null);
+        setSuccess(false);
+        setSuccessMessage('');
 
         try {
             const token = localStorage.getItem('token');
             const formData = new FormData();
-
-            // Add required fields
             formData.append('name', currentSection.name.trim());
             formData.append('description', currentSection.description ? currentSection.description.trim() : '');
-
-            // Handle images for both add and edit modes
             if (modalMode === 'edit') {
-                // For edit mode, handle both existing and new images
                 currentSection.images.forEach((image, index) => {
                     if (image.file) {
-                        // This is a new image
                         formData.append(`images[${index}]`, image.file);
                     } else if (image.originalPath) {
-                        // This is an existing image that wasn't changed
                         formData.append(`existing_images[${index}]`, image.originalPath);
                     }
                 });
             } else {
-                // For add mode, just append all selected files
                 selectedFiles.forEach((file, index) => {
                     formData.append(`images[${index}]`, file);
                 });
             }
-
             let response;
             if (modalMode === 'add') {
-                // Add new section using POST
                 response = await apiClient.post('/sections/API', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
@@ -222,112 +226,44 @@ const SectionsManagement = () => {
                     },
                     withCredentials: true
                 });
-
-                // Update new sections immediately
-                setNewSections(prev => [...prev, response.data]);
-                toast.success('تم إضافة القسم بنجاح', { id: toastId });
+                setSuccess(true);
+                setSuccessMessage('تم إضافة القسم بنجاح');
             } else {
-                // Edit mode - use PATCH
-                if (currentSection.isNewSection) {
-                    // Edit new section
-                    formData.append('_method', 'PATCH');
-                    response = await apiClient.post(`/sections/${currentSection.id}/API`, formData, {
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                            'Accept': 'application/json',
-                            'X-Requested-Method': 'PATCH',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        withCredentials: true
-                    });
-
-                    // Update new sections immediately
-                    setNewSections(prev => prev.map(section =>
-                        section.id === currentSection.id ? response.data : section
-                    ));
-                    toast.success('تم تحديث القسم بنجاح', { id: toastId });
-                } else {
-                    // Edit old section
-                    formData.append('_method', 'PATCH');
-                    response = await apiClient.post(`/sections/${currentSection.id}/API`, formData, {
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                            'Accept': 'application/json',
-                            'X-Requested-Method': 'PATCH',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        withCredentials: true
-                    });
-
-                    // Update sections immediately with the response data
-                    setSections(prev => prev.map(section =>
-                        section.id === currentSection.id
-                            ? {
-                                ...section,
-                                name: response.data.name,
-                                description: response.data.description,
-                                image1: response.data.image1,
-                                image2: response.data.image2,
-                                image3: response.data.image3,
-                                image4: response.data.image4,
-                                image5: response.data.image5,
-                                lastUpdated: new Date().toISOString()
-                            }
-                            : section
-                    ));
-
-                    // Update stats
-                    const updatedSections = sections.map(section =>
-                        section.id === currentSection.id
-                            ? {
-                                ...section,
-                                name: response.data.name,
-                                description: response.data.description,
-                                image1: response.data.image1,
-                                image2: response.data.image2,
-                                image3: response.data.image3,
-                                image4: response.data.image4,
-                                image5: response.data.image5,
-                                lastUpdated: new Date().toISOString()
-                            }
-                            : section
-                    );
-
-                    const active = updatedSections.filter(s => s.status === 'active').length;
-                    const total = updatedSections.length;
-                    setStats({
-                        active,
-                        inactive: total - active,
-                        total
-                    });
-
-                    toast.success('تم تحديث القسم بنجاح', { id: toastId });
-                }
+                formData.append('_method', 'PATCH');
+                response = await apiClient.post(`/sections/${currentSection.id}/API`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'Accept': 'application/json',
+                        'X-Requested-Method': 'PATCH',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    withCredentials: true
+                });
+                setSuccess(true);
+                setSuccessMessage('تم تحديث القسم بنجاح');
             }
-
             setShowModal(false);
             setCurrentSection({ name: '', description: '' });
             setSelectedFiles([]);
+            await refetchNewSections();
+            setTimeout(() => {
+                setSuccess(false);
+                setSuccessMessage('');
+            }, 3000);
         } catch (error) {
-            console.error('Error submitting section:', error);
             let errorMessage = 'حدث خطأ أثناء حفظ القسم. يرجى المحاولة مرة أخرى.';
-
             if (error.response?.data?.errors) {
-                // Handle Laravel validation errors
                 errorMessage = Object.values(error.response.data.errors)
                     .flat()
                     .map(msg => msg.replace('The ', '').replace(' field', ''))
                     .join(', ');
             } else if (error.response?.data?.message) {
-                // Handle custom error message from the API
                 errorMessage = error.response.data.message;
             } else if (!error.response) {
-                // Handle network/connection errors
                 errorMessage = 'فشل في الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت الخاص بك والمحاولة مرة أخرى';
             }
-
             setFormError(errorMessage);
-            toast.error(errorMessage, { id: toastId });
+            setError(errorMessage);
         } finally {
             setIsSubmitting(false);
         }
@@ -346,22 +282,26 @@ const SectionsManagement = () => {
 
     const handleDeleteConfirm = async () => {
         if (!sectionToDelete) return;
-
         setIsDeleting(true);
-        const toastId = toast.loading('جاري حذف القسم...');
+        setError(null);
+        setSuccess(false);
+        setSuccessMessage('');
         try {
             if (sectionToDelete.isNewSection) {
-                await apiClient.delete(`/sections/${sectionToDelete.id}/API`, {
+                // Use POST with _method: 'DELETE' in FormData
+                const formData = new FormData();
+                formData.append('_method', 'DELETE');
+                await apiClient.post(`/sections/${sectionToDelete.id}/API`, formData, {
                     headers: {
+                        'Content-Type': 'multipart/form-data',
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     },
                     withCredentials: true
                 });
-                const updatedNewSections = newSections.filter(section => section.id !== sectionToDelete.id);
-                setNewSections(updatedNewSections);
-                toast.success('تم حذف القسم بنجاح', { id: toastId });
+                setSuccess(true);
+                setSuccessMessage('تم حذف القسم بنجاح');
             } else {
                 const updatedSections = sections.map(section =>
                     section.id === sectionToDelete.id
@@ -369,7 +309,6 @@ const SectionsManagement = () => {
                         : section
                 );
                 setSections(updatedSections);
-
                 const active = updatedSections.filter(s => s.status === 'active').length;
                 const total = updatedSections.length;
                 setStats({
@@ -377,15 +316,19 @@ const SectionsManagement = () => {
                     inactive: total - active,
                     total
                 });
-                toast.success('تم حذف القسم بنجاح', { id: toastId });
+                setSuccess(true);
+                setSuccessMessage('تم حذف القسم بنجاح');
             }
-
             setShowDeleteModal(false);
             setSectionToDelete(null);
+            await refetchNewSections();
+            setTimeout(() => {
+                setSuccess(false);
+                setSuccessMessage('');
+            }, 3000);
         } catch (error) {
-            console.error('Failed to delete section:', error);
             const errorMessage = error.response?.data?.message || 'حدث خطأ أثناء حذف القسم. يرجى المحاولة مرة أخرى.';
-            toast.error(errorMessage, { id: toastId });
+            setError(errorMessage);
         } finally {
             setIsDeleting(false);
         }
@@ -429,38 +372,7 @@ const SectionsManagement = () => {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <Toaster
-                position="top-center"
-                toastOptions={{
-                    duration: 3000,
-                    style: {
-                        background: '#fff',
-                        color: '#333',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                        borderRadius: '0.5rem',
-                        padding: '1rem',
-                    },
-                    success: {
-                        iconTheme: {
-                            primary: '#10B981',
-                            secondary: '#fff',
-                        },
-                    },
-                    error: {
-                        iconTheme: {
-                            primary: '#EF4444',
-                            secondary: '#fff',
-                        },
-                    },
-                    loading: {
-                        iconTheme: {
-                            primary: '#3B82F6',
-                            secondary: '#fff',
-                        },
-                    },
-                }}
-            />
+        <div className="container mx-auto px-4 mt-20">
             <div className="flex justify-between items-center mb-6">
                 <button
                     onClick={handleAddClick}
@@ -471,6 +383,25 @@ const SectionsManagement = () => {
                 </button>
                 <h1 className="text-3xl font-bold text-gray-800">إدارة الأقسام</h1>
             </div>
+
+            {/* Error message */}
+            {error && (
+                <div className="p-4 mb-4 bg-red-50 rounded-lg">
+                    <div className="flex">
+                        <AlertTriangle className="h-5 w-5 text-red-500 ml-2" />
+                        <p className="text-sm text-red-500">{error}</p>
+                    </div>
+                </div>
+            )}
+            {/* Success message */}
+            {success && (
+                <div className="p-4 mb-4 bg-green-50 rounded-lg">
+                    <div className="flex">
+                        <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
+                        <p className="text-sm text-green-500">{successMessage}</p>
+                    </div>
+                </div>
+            )}
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -578,10 +509,10 @@ const SectionsManagement = () => {
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-left text-sm font-medium">
-                                    <div className="flex space-x-2 justify-end">
+                                    <div className="flex items-center gap-2 justify-end">
                                         <button
                                             onClick={() => handleEditClick(section, false)}
-                                            className="text-indigo-600 hover:text-indigo-900"
+                                            className="text-blue-600 hover:text-blue-900"
                                         >
                                             <Edit className="w-5 h-5" />
                                         </button>
@@ -655,7 +586,7 @@ const SectionsManagement = () => {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-left text-sm font-medium">
-                                        <div className="flex space-x-2 justify-end">
+                                        <div className="flex items-center gap-2 justify-end">
                                             <button
                                                 onClick={() => handleEditClick(section, true)}
                                                 className="text-indigo-600 hover:text-indigo-900"

@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
     Bell,
+    ChevronLeft,
+    ChevronRight,
     LogOut,
     Menu,
     Moon,
@@ -11,6 +13,8 @@ import {
     User,
     X
 } from 'lucide-react';
+import Logo from '../../../../public/logo.png';
+
 
 const AdminNavbar = ({ toggleSidebar, isOpen }) => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -33,83 +37,57 @@ const AdminNavbar = ({ toggleSidebar, isOpen }) => {
     };
 
     return (
-        <nav className="bg-white shadow-md px-4 py-2 flex items-center justify-between sticky top-0 z-10">
-            {/* Left section: Logo and toggle */}
-            <div className="flex items-center">
+        <nav className="fixed top-0 right-0 left-0 w-full h-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-lg border-b border-gradient-to-l from-green-400/30 to-emerald-500/20 px-6 py-3 flex items-center justify-between z-30 transition-all duration-300">
+            {/* Left section: Sidebar toggle only */}
+            <div className="flex items-center gap-2">
                 <button
                     onClick={toggleSidebar}
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                    aria-label={isOpen ? 'Close sidebar' : 'Open sidebar'}
+                    className="transition-colors"
+                    aria-label={isOpen ? 'Shrink sidebar' : 'Expand sidebar'}
                 >
-                    {isOpen ? <X size={20} /> : <Menu size={20} />}
+                    <Menu size={24} />
                 </button>
-                <Link to="/admin" className="mx-4 flex items-center">
-                    <span className="text-xl font-bold text-green-600">لوحة الإدارة</span>
-                </Link>
+
+                <img src={Logo} alt="Logo" className="h-12 md:h-14 max-w-[150px] object-contain" style={{ maxHeight: '56px', minHeight: '40px' }} />
+
             </div>
 
-            {/* Right section: Actions and profile */}
-            <div className="flex items-center">
-                {/* Dark mode toggle */}
-                {/* <button
-                    onClick={toggleDarkMode}
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors relative"
-                    aria-label="Toggle dark mode"
-                >
-                    {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-                </button> */}
-
-                {/* Notifications */}
-                {/* <button
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors mx-2 relative"
-                    aria-label="Notifications"
-                >
-                    <Bell size={20} />
-                    <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">
-                        3
-                    </span>
-                </button> */}
-
-                {/* User dropdown */}
+            {/* Right section: User dropdown only */}
+            <div className="flex items-center gap-2">
                 <div className="relative">
                     <button
                         onClick={() => setDropdownOpen(!dropdownOpen)}
-                        className="flex items-center space-x-2 cursor-pointer focus:outline-none"
+                        className="flex items-center gap-2 cursor-pointer focus:outline-none group"
                     >
-                        
                         <div className="hidden md:block text-right">
-                            <p className="text-sm font-medium">{user?.name || 'المسؤول'}</p>
-                            <p className="text-xs text-gray-500">{user?.role || 'مدير النظام'}</p>
+                            <p className="text-base font-bold text-gray-800 dark:text-gray-100">{user?.name || 'المسؤول'}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{user?.role || 'مدير النظام'}</p>
                         </div>
-                        <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white ml-10">
-                            <User size={20} />
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-white ml-4 shadow-md border-2 border-white dark:border-gray-800 group-hover:scale-105 transition-transform">
+                            <User size={22} />
                         </div>
                     </button>
-
                     {/* Dropdown menu */}
                     {dropdownOpen && (
-                        <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 text-right">
+                        <div className="absolute left-0 mt-3 w-56 bg-white/95 dark:bg-gray-900/95 rounded-2xl shadow-2xl py-2 z-40 text-right border border-green-100 dark:border-gray-800 animate-fade-in">
                             <Link
                                 to="/admin/profile"
-                                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                className="flex items-center px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-gray-800 rounded-xl gap-2 transition-colors"
                             >
-                                <User size={16} className="ml-2" />
-                                الملف الشخصي
+                                <User size={18} className="ml-2" /> الملف الشخصي
                             </Link>
                             <Link
                                 to="/admin/settings"
-                                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                className="flex items-center px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-gray-800 rounded-xl gap-2 transition-colors"
                             >
-                                <Settings size={16} className="ml-2" />
-                                الإعدادات
+                                <Settings size={18} className="ml-2" /> الإعدادات
                             </Link>
-                            <div className="border-t border-gray-100 my-1"></div>
+                            <div className="border-t border-gray-100 dark:border-gray-700 my-2"></div>
                             <button
                                 onClick={handleLogout}
-                                className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                                className="w-full flex items-center px-5 py-3 text-base text-red-600 hover:bg-red-50 dark:hover:bg-gray-800 rounded-xl gap-2 transition-colors"
                             >
-                                <LogOut size={16} className="ml-2" />
-                                تسجيل الخروج
+                                <LogOut size={18} className="ml-2" /> تسجيل الخروج
                             </button>
                         </div>
                     )}

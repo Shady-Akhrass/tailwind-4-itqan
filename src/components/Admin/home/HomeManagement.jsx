@@ -287,7 +287,7 @@ const HomeManagement = () => {
     }
 
     return (
-        <div className="container mx-auto px-4 py-12">
+        <div className="container mx-auto px-4 mt-20">
             <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-md p-8">
                 <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">إدارة الصفحة الرئيسية</h1>
 

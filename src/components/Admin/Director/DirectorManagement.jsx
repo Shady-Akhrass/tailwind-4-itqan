@@ -254,7 +254,7 @@ const AdminDirectorsPage = () => {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 mt-20">
             <div className="max-w-7xl mx-auto">
                 <div className="flex justify-between items-center mb-6">
                     <button
@@ -273,6 +273,15 @@ const AdminDirectorsPage = () => {
                         <div className="flex">
                             <AlertTriangle className="h-5 w-5 text-red-500 ml-2" />
                             <p className="text-sm text-red-500">{error}</p>
+                        </div>
+                    </div>
+                )}
+                {/* Success message */}
+                {success && (
+                    <div className="p-4 mb-4 bg-green-50 rounded-lg">
+                        <div className="flex">
+                            <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
+                            <p className="text-sm text-green-500">{successMessage || 'تمت العملية بنجاح'}</p>
                         </div>
                     </div>
                 )}
@@ -349,9 +358,6 @@ const AdminDirectorsPage = () => {
                         </button>
                     </div>
                 </div>
-
-                {/* Success message */}
-                {success && <SuccessMessage message={successMessage} />}
 
                 {/* Tree View */}
                 {viewMode === 'tree' && !loading && (
