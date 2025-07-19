@@ -4,6 +4,129 @@ import { apiClient } from '../../api/queries';
 import { checkApiUrl } from '../../hooks/checkApiUrl';
 
 const Directors = () => {
+    useEffect(() => {
+        // Get all director names from treeData
+        const getAllNames = (nodes) => {
+            let names = [];
+            nodes.forEach(node => {
+                names.push(node.name);
+                if (node.children && node.children.length > 0) {
+                    names = names.concat(getAllNames(node.children));
+                }
+            });
+            return names;
+        };
+
+        // SEO Meta Tags Implementation
+        const orgName = 'دار الاتقان لتعليم القرآن وعلومه';
+        const metaTags = {
+            // Basic Meta Tags
+            'title': `الهيكل الإداري | ${orgName}`,
+            'description': `تعرف على القيادة المتميزة في ${orgName} - فريق من المدراء والإداريين المتميزين في تعليم القرآن وعلومه والتطوير التربوي`,
+            'keywords': `${orgName}, هيكل الإدارة, مدراء الاتقان, قيادة تعليمية, إدارة تربوية, تطوير تعليمي, مؤسسات تعليمية فلسطينية, تعليم في فلسطين, تعليم القرآن, علوم القرآن, ${getAllNames(treeData).join(', ')}`,
+
+            // Open Graph Tags
+            'og:title': `الهيكل الإداري | ${orgName}`,
+            'og:description': `اكتشف فريق القيادة المتميز في ${orgName} وتعرف على الهيكل الإداري المتكامل والكفاءات التعليمية في تعليم القرآن وعلومه`,
+            'og:type': 'website',
+            'og:locale': 'ar_PS',
+            'og:site_name': orgName,
+
+            // Twitter Card Tags
+            'twitter:card': 'summary_large_image',
+            'twitter:title': `الهيكل الإداري | ${orgName}`,
+            'twitter:description': `تعرف على القيادة المتميزة في ${orgName} وفريق العمل المتخصص في تعليم القرآن وعلومه`,
+
+            // Additional SEO Tags
+            'robots': 'index, follow, max-snippet:-1, max-image-preview:large',
+            'language': 'Arabic',
+            'revisit-after': '3 days',
+            'author': orgName,
+            'coverage': 'Worldwide',
+            'target': 'all',
+            'rating': 'General',
+            'category': 'education, management, academic, تعليم القرآن, علوم القرآن'
+        };
+
+        // Set document title
+        document.title = metaTags.title;
+
+        // Function to create or update meta tags
+        const updateMetaTag = (name, content, attribute = 'name') => {
+            let meta = document.querySelector(`meta[${attribute}="${name}"]`);
+            if (!meta) {
+                meta = document.createElement('meta');
+                meta.setAttribute(attribute, name);
+                document.head.appendChild(meta);
+            }
+            meta.setAttribute('content', content);
+        };
+
+        // Create structured data for Organization and People
+        const structuredData = {
+            "@context": "https://schema.org",
+            "@type": ["Organization", "EducationalOrganization"],
+            "name": orgName,
+            "description": "دار الاتقان لتعليم القرآن وعلومه، مؤسسة تعليمية رائدة متخصصة في تعليم القرآن الكريم وعلومه والتطوير التربوي في فلسطين.",
+            "url": window.location.href,
+            "areaServed": {
+                "@type": "Country",
+                "name": "Palestine"
+            },
+            "employee": treeData.map(director => ({
+                "@type": "Person",
+                "name": director.name,
+                "jobTitle": director.position,
+                "image": director.image ? checkApiUrl(director.image) : undefined,
+                "worksFor": {
+                    "@type": "EducationalOrganization",
+                    "name": orgName
+                }
+            })),
+            "knowsLanguage": ["ar", "en"],
+            "parentOrganization": {
+                "@type": "Organization",
+                "name": orgName
+            }
+        };
+
+        // Add structured data script
+        let scriptTag = document.querySelector('#structured-data');
+        if (!scriptTag) {
+            scriptTag = document.createElement('script');
+            scriptTag.id = 'structured-data';
+            scriptTag.type = 'application/ld+json';
+            document.head.appendChild(scriptTag);
+        }
+        scriptTag.textContent = JSON.stringify(structuredData);
+
+        // Update all meta tags
+        Object.entries(metaTags).forEach(([name, content]) => {
+            if (name.startsWith('og:')) {
+                updateMetaTag(name, content, 'property');
+            } else if (name.startsWith('twitter:')) {
+                updateMetaTag(name, content, 'name');
+            } else {
+                updateMetaTag(name, content);
+            }
+        });
+
+        // Canonical URL
+        let canonicalLink = document.querySelector('link[rel="canonical"]');
+        if (!canonicalLink) {
+            canonicalLink = document.createElement('link');
+            canonicalLink.rel = 'canonical';
+            document.head.appendChild(canonicalLink);
+        }
+        canonicalLink.href = window.location.href;
+
+        // Cleanup function
+        return () => {
+            // Optionally remove tags on unmount if needed
+            // scriptTag?.remove();
+        };
+    }, []);
+
     const [treeData, setTreeData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [expandedNodes, setExpandedNodes] = useState(new Set());
@@ -14,14 +137,26 @@ const Directors = () => {
         fetchTreeData();
     }, []);
 
+    const getAllNodeIds = (nodes) => {
+        let ids = [];
+        for (const node of nodes) {
+            ids.push(node.id);
+            if (node.children && node.children.length > 0) {
+                ids = ids.concat(getAllNodeIds(node.children));
+            }
+        }
+        return ids;
+    };
+
     const fetchTreeData = async () => {
         try {
             setLoading(true);
             const response = await apiClient.get('/directors/tree');
             if (response.data.success) {
-                setTreeData(response.data.data);
-                const rootIds = response.data.data.map(node => node.id);
-                setExpandedNodes(new Set(rootIds));
+                const nodes = response.data.data;
+                setTreeData(nodes);
+                const allIds = getAllNodeIds(nodes);
+                setExpandedNodes(new Set(allIds));
             } else {
                 setError('فشل في تحميل بيانات المدراء');
             }
@@ -32,6 +167,7 @@ const Directors = () => {
             setLoading(false);
         }
     };
+
 
     const toggleNode = (nodeId) => {
         const newExpanded = new Set(expandedNodes);
@@ -76,23 +212,21 @@ const Directors = () => {
                 {/* Node Card */}
                 <div
                     className={`
-                        group relative flex flex-col items-center p-8 mb-6 rounded-3xl transition-all duration-500 transform
-                        ${level === 0
-                            ? 'bg-white shadow-xl hover:shadow-2xl scale-105'
-                            : 'bg-white shadow-lg hover:shadow-xl hover:scale-105'
-                        }
+                        group relative flex flex-col items-center p-4 mb-4 rounded-2xl transition-all duration-500 transform
+                        bg-white shadow-md hover:shadow-lg hover:scale-105
                         ${hasChildren ? 'cursor-pointer' : ''}
                         ${colors.border}
                         border-2 hover:border-opacity-100 border-opacity-30
-                        w-[320px] hover:-translate-y-2
-                        ${isHovered ? 'ring-4 ring-opacity-30 ring-' + colors.accent + '-400' : ''}
+                        w-[240px] hover:-translate-y-1
+                        ${isHovered ? 'ring-2 ring-opacity-30 ring-' + colors.accent + '-400' : ''}
                     `}
                     onClick={() => hasChildren && toggleNode(node.id)}
                     onMouseEnter={() => setHoveredNode(node.id)}
                     onMouseLeave={() => setHoveredNode(null)}
                 >
                     {/* Image Container with Enhanced Design */}
-                    <div className="relative w-36 h-36 mb-6">
+                    <div className="relative w-24 h-24 mb-4">
+
                         {node.image ? (
                             <div className={`relative w-full h-full rounded-full overflow-hidden border-4 border-white shadow-xl group-hover:shadow-${colors.accent}-500/50 transition-all duration-500 transform group-hover:scale-110`}>
                                 <img
@@ -115,41 +249,16 @@ const Directors = () => {
 
                     {/* Enhanced Info Container */}
                     <div className="text-center mb-4">
-                        <h3 className={`text-2xl font-bold text-gray-900 mb-3 group-hover:text-${colors.accent}-600 transition-colors duration-300`}>
+                        <h3 className={`text-lg font-bold text-gray-900 mb-2 group-hover:text-${colors.accent}-600 transition-colors duration-300`}>
                             {node.name}
                         </h3>
+
                         <div className={`inline-block px-4 py-2 bg-gradient-to-r ${colors.bg} text-white rounded-full text-sm font-semibold shadow-lg mb-4`}>
                             {node.position}
                         </div>
                     </div>
 
-                    {/* Contact Information */}
-                    <div className="space-y-2 text-sm text-gray-600 w-full">
-                        {node.email && (
-                            <div className="flex items-center justify-center space-x-2 rtl:space-x-reverse hover:text-green-600 transition-colors">
-                                <Mail className="w-4 h-4" />
-                                <span>{node.email}</span>
-                            </div>
-                        )}
-                        {node.phone && (
-                            <div className="flex items-center justify-center space-x-2 rtl:space-x-reverse hover:text-green-600 transition-colors">
-                                <Phone className="w-4 h-4" />
-                                <span dir="ltr">{node.phone}</span>
-                            </div>
-                        )}
-                        {node.location && (
-                            <div className="flex items-center justify-center space-x-2 rtl:space-x-reverse hover:text-green-600 transition-colors">
-                                <MapPin className="w-4 h-4" />
-                                <span>{node.location}</span>
-                            </div>
-                        )}
-                        {node.experience && (
-                            <div className="flex items-center justify-center space-x-2 rtl:space-x-reverse mt-3">
-                                <Star className="w-4 h-4 text-green-500" />
-                                <span className="font-semibold text-gray-700">{node.experience} خبرة</span>
-                            </div>
-                        )}
-                    </div>
+
 
                     {/* Enhanced Toggle Button */}
                     {hasChildren && (
@@ -274,7 +383,7 @@ const Directors = () => {
 
             {/* Tree View */}
             <div className="overflow-x-auto mt-8">
-                <div className="min-w-max px-4">
+                <div className="min-w-max px-8 ">
                     {treeData.map(node => renderNode(node))}
                 </div>
             </div>

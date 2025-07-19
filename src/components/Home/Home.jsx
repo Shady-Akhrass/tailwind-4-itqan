@@ -15,6 +15,7 @@ const GeniusesSection = React.lazy(() => import('./GeniusesSection'));
 const ProjectsSection = React.lazy(() => import('./ProjectsSection'));
 const SoundSection = React.lazy(() => import('./SoundSection'));
 const AchievementsSection = React.lazy(() => import('./AchievementsSection'));
+const PrayerTimes = React.lazy(() => import('./PrayerTimes'));
 
 // Optimized section wrapper with content-visibility and will-change
 const SectionWrapper = ({ children, priority = 'low', id }) => (
@@ -51,8 +52,40 @@ const Home = () => {
   const queryClient = useQueryClient();
   const { mutate: incrementVisitors } = useIncrementVisitors();
 
+  useEffect(() => {
+    // Check if there's a prayer section query parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const showPrayer = urlParams.get('prayer');
+
+    if (showPrayer === 'true') {
+      // Find and scroll to prayer section
+      const prayerSection = document.getElementById('prayer');
+      if (prayerSection) {
+        prayerSection.scrollIntoView({ behavior: 'smooth' });
+        // Preload the prayer times component
+        const section = sections.find(s => s.id === 'prayer');
+        if (section?.Component) {
+          section.Component.preload?.();
+        }
+      }
+    }
+  }, []);
+
   // Increment visitor count on page load
   useEffect(() => {
+    // Handle direct access to prayer times
+    const urlParams = new URLSearchParams(window.location.search);
+    const showPrayer = urlParams.get('section');
+
+    if (showPrayer === 'prayer') {
+      const prayerSection = document.getElementById('prayer');
+      if (prayerSection) {
+        setTimeout(() => {
+          prayerSection.scrollIntoView({ behavior: 'smooth' });
+        }, 1000); // Delay to ensure content is loaded
+      }
+    }
+
     incrementVisitors();
   }, [incrementVisitors]);
 
@@ -61,6 +94,7 @@ const Home = () => {
     { Component: MessageSection, id: 'message', priority: 'high', dir: 'rtl' },
     { Component: YouTubeSection, id: 'youtube', priority: 'medium', dir: 'rtl' },
     { Component: AchievementsSection, id: 'achievements', priority: 'medium', dir: 'rtl' },
+    { Component: PrayerTimes, id: 'prayer', priority: 'medium', dir: 'rtl' },
     { Component: GeniusesSection, id: 'geniuses', priority: 'low', dir: 'rtl' },
     { Component: ProjectsSection, id: 'projects', priority: 'low', dir: 'rtl' },
     { Component: SoundSection, id: 'sound', priority: 'low', dir: 'rtl' }
@@ -123,7 +157,7 @@ const Home = () => {
 
       {/* Critical Meta Tags with preconnect */}
       <meta name="description" content="دار الإتقان لتعليم القرآن - مركز تعليمي رائد في قطاع غزة" />
-      
+
       <link rel="preconnect" href="https://ditq.org" crossOrigin="anonymous" />
       <link rel="dns-prefetch" href="https://ditq.org" />
       <link rel="preconnect" href="https://api.ditq.org" crossOrigin="anonymous" />

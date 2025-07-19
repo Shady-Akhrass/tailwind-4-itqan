@@ -300,6 +300,67 @@
     content-visibility: auto;
     contain-intrinsic-size: 0 400px;
   }
+
+  /* Emerald to Yellow overrides for dark mode */
+  .dark .border-emerald-200 {
+    @apply border-yellow-700;
+  }
+
+  .dark .border-emerald-100 {
+    @apply border-yellow-700/50;
+  }
+
+  .dark .text-emerald-800 {
+    @apply text-yellow-400;
+  }
+
+  .dark .text-emerald-700 {
+    @apply text-yellow-400;
+  }
+
+  .dark .text-emerald-900 {
+    @apply text-yellow-400;
+  }
+
+  .dark .bg-emerald-50 {
+    @apply bg-yellow-900/50;
+  }
+
+  .dark .hover\:bg-emerald-100:hover {
+    @apply hover:bg-yellow-900/20;
+  }
+
+  .dark .bg-emerald-100 {
+    @apply bg-yellow-900/50;
+  }
+
+  .dark .focus\:ring-emerald-500:focus {
+    @apply ring-yellow-400;
+  }
+
+  .dark .placeholder-emerald-400::placeholder {
+    @apply placeholder-yellow-200;
+  }
+
+  .dark .border-emerald-200 {
+    @apply border-yellow-700;
+  }
+
+  .dark .focus\:border-transparent:focus {
+    @apply border-transparent;
+  }
+
+  .dark .text-emerald-600 {
+    @apply text-yellow-400;
+  }
+
+  .dark .text-emerald-700 {
+    @apply text-yellow-400;
+  }
+
+  .dark .text-emerald-800 {
+    @apply text-yellow-400;
+  }
 }
 
 /* Custom Scrollbar Styles */

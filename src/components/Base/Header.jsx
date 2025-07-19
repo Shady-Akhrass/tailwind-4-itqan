@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FaBars, FaTimes, FaChevronDown, FaHome, FaInfoCircle, FaBookOpen, FaNewspaper, FaBook, FaPhoneAlt, FaMoon, FaSun } from 'react-icons/fa';
+import { FaBars, FaTimes, FaChevronDown, FaHome, FaInfoCircle, FaBookOpen, FaNewspaper, FaBook, FaPhoneAlt, FaMoon, FaSun, FaClock } from 'react-icons/fa';
 import { SearchIcon } from 'lucide-react';
 import Logo from '../../../public/logo.png';
 import toast from 'react-hot-toast';
@@ -35,7 +35,7 @@ const Navbar = () => {
                 { label: 'مجلس الإدارة', link: '/director', id: 'director' },
                 { label: 'الرؤية والرسالة', link: '/vision', id: 'vision' },
                 { label: 'كلمة رئيس الدار', link: '/speech', id: 'speech' },
-                { label: 'الفروع', link: '/branche', id: 'branche' }
+                { label: 'الفروع', link: '/branche', id: 'branche' },
             ]
         },
 
@@ -60,6 +60,12 @@ const Navbar = () => {
             label: 'أدلة الدار',
             link: '/clues',
             id: 'clues'
+        },
+        {
+            icon: <FaClock className="text-xl" />,
+            label: 'مواقيت الصلاة',
+            link: '/prayer-times',
+            id: 'prayer-times'
         },
         {
             icon: <FaPhoneAlt className="text-xl" />,

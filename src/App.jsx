@@ -23,6 +23,7 @@ const ContactSection = lazy(() => import('./components/Contact/ContactSection'))
 const Speech = lazy(() => import('./components/About/Speech'));
 const Branches = lazy(() => import('./components/About/Branches'));
 const Mission = lazy(() => import('./components/About/Mission'));
+const PrayerTimes = lazy(() => import('./components/PrayerTime/PrayerTimes'));
 const Directors = lazy(() => import('./components/About/Directors'));
 const Login = lazy(() => import('./components/Admin/auth/Login'));
 const SectionsManagement = lazy(() => import('./components/Admin/sections/SectionsManagement'));
@@ -80,7 +81,7 @@ function Layout() {
           <Route path="/vision" element={<Mission />} />
           <Route path="/director" element={<Directors />} />
           <Route path="/:title" element={<DynamicSection />} />
-
+          <Route path="/prayer-times" element={<PrayerTimes />} />
           {/* Admin routes */}
           <Route path="/admin/login" element={<Login />} />
 

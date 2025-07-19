@@ -77,10 +77,11 @@ const DynamicSection = () => {
     if (!section) return <div className="text-center py-40">No section content found.</div>;
 
     // --- SEO Variables ---
-    const pageUrl = `https://www.ditq.org/sections/${title}`; // Use your actual domain
-    const metaDescription = section.description ? section.description.substring(0, 160) : `Learn about ${section.name} at دار الإتقان.`;
+    const pageUrl = `https://www.ditq.org/sections/${title}`;
+    const metaDescription = section.description ? section.description.substring(0, 160).trim() : `تعرف على ${section.name} في دار الإتقان.`;
     const sectionImages = getSectionImages(section);
-    const primaryImage = sectionImages.length > 0 ? sectionImages[0].url : 'https://www.ditq.org/default-image.jpg'; // Have a default image
+    const primaryImage = sectionImages.length > 0 ? sectionImages[0].url : 'https://www.ditq.org/default-image.jpg';
+    const publishedDate = section.created_at || new Date().toISOString();
 
     // --- Structured Data (JSON-LD) ---
     const articleSchema = {
@@ -92,7 +93,7 @@ const DynamicSection = () => {
         },
         'headline': section.name,
         'description': metaDescription,
-        'image': sectionImages.map(img => img.url), // Provide all images to Google
+        'image': sectionImages.map(img => img.url),
         'author': {
             '@type': 'Organization',
             'name': 'دار الإتقان',
@@ -102,12 +103,11 @@ const DynamicSection = () => {
             'name': 'دار الإتقان',
             'logo': {
                 '@type': 'ImageObject',
-                'url': 'https://www.ditq.org/logo.png', // URL to your logo
+                'url': 'https://www.ditq.org/logo.png',
             },
         },
-        // If you have datePublished/dateModified in your API, add them here
-        // "datePublished": "2025-06-07T08:00:00+03:00",
-        // "dateModified": "2025-06-07T09:30:00+03:00"
+        'datePublished': publishedDate,
+        'dateModified': publishedDate,
     };
 
     const breadcrumbSchema = {
@@ -117,8 +117,8 @@ const DynamicSection = () => {
             {
                 '@type': 'ListItem',
                 'position': 1,
-                'name': 'الرئيسية', // Home
-                'item': 'https://www.ditq.org/', // URL to your home page
+                'name': 'الرئيسية',
+                'item': 'https://www.ditq.org/',
             },
             {
                 '@type': 'ListItem',
@@ -131,28 +131,25 @@ const DynamicSection = () => {
 
     return (
         <>
-            {/* React 19+ Head Management: All these tags are automatically moved to the <head> */}
-            <title>{`${section.name} - دار الإتقان`}</title>
-            <meta name="description" content={metaDescription} />
-            <meta name="keywords" content={`${section.name}, دار الإتقان, قرآن, تعليم`} />
+            {/* SEO Meta Tags (NewsDetails style, using DynamicSection variables) */}
+            <title>{section.name ? `${section.name} - دار الإتقان` : "أقسام دار الإتقان"}</title>
+            <meta
+                name="description"
+                content={metaDescription}
+            />
+            <meta property="og:title" content={section.name ? `${section.name} - دار الإتقان` : "أقسام دار الإتقان"} />
+            <meta property="og:image" content={primaryImage} />
+            <meta property="og:url" content={pageUrl} />
+            <meta property="og:type" content="article" />
+            <meta property="og:description" content={metaDescription} />
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:title" content={section.name ? `${section.name} - دار الإتقان` : "أقسام دار الإتقان"} />
+            <meta name="twitter:image" content={primaryImage} />
+            <meta name="twitter:description" content={metaDescription} />
+            <meta property="article:published_time" content={publishedDate} />
+            <meta property="article:section" content="Section" />
             <link rel="canonical" href={pageUrl} />
             <style>{carouselStyles}</style>
-
-            {/* Open Graph Tags (for Facebook, LinkedIn, etc.) */}
-            <meta property="og:title" content={`${section.name} - دار الإتقان`} />
-            <meta property="og:description" content={metaDescription} />
-            <meta property="og:url" content={pageUrl} />
-            <meta property="og:image" content={primaryImage} />
-            <meta property="og:type" content="article" />
-            <meta property="og:site_name" content="دار الإتقان" />
-
-            {/* Twitter Card Tags */}
-            <meta name="twitter:card" content="summary_large_image" />
-            <meta name="twitter:title" content={`${section.name} - دار الإتقان`} />
-            <meta name="twitter:description" content={metaDescription} />
-            <meta name="twitter:image" content={primaryImage} />
-
-            {/* Structured Data Scripts */}
             <script type="application/ld+json">{JSON.stringify(articleSchema)}</script>
             <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
 
@@ -172,7 +169,7 @@ const DynamicSection = () => {
                 <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
                     {/* Facebook Section */}
                     <aside className="lg:col-span-1 order-2 lg:order-1">
-                        <div className="sticky top-24"> {/* Adjusted sticky top */}
+                        <div className="sticky top-24">
                             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
                                 <div className="p-4 border-b border-gray-100 dark:border-gray-700">
                                     <div className="flex items-center justify-between">
@@ -208,7 +205,6 @@ const DynamicSection = () => {
                                         <div key={image.id} className="relative aspect-video">
                                             <img
                                                 src={image.url}
-                                                // More descriptive alt text for better accessibility and SEO
                                                 alt={`${section.name} - صورة ${image.id}`}
                                                 className="w-full h-full object-cover"
                                             />
