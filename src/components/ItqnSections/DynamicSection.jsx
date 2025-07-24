@@ -198,7 +198,7 @@ const DynamicSection = () => {
                     {/* Main Section Content */}
                     <main className="lg:col-span-3 order-1 lg:order-2">
                         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                            <h1 className="text-3xl font-bold p-6 text-center">{section.name}</h1>
+                            <h1 className="text-3xl font-bold p-6 text-center text-black dark:text-white">{section.name}</h1>
                             {sectionImages.length > 0 && (
                                 <Carousel showThumbs={false} showStatus={false} infiniteLoop useKeyboardArrows autoPlay interval={5000} className="aspect-video">
                                     {sectionImages.map(image => (

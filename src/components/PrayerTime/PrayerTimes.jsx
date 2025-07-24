@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import jsPDF from 'jspdf';
+import DownloadPrayerTimesPDF from './DownloadPrayerTimesPDF';
 import { MapPin, Loader2, Search, Clock, Bell, Calendar, ChevronRight } from 'lucide-react';
 
 const IslamicPrayerTimes = () => {
@@ -16,21 +18,23 @@ const IslamicPrayerTimes = () => {
     const [nextPrayer, setNextPrayer] = useState(null);
     const [timeToNext, setTimeToNext] = useState('');
 
+    // ...removed old PDF logic, now using DownloadPrayerTimesPDF component...
+
     // SEO Meta Tags Effect
     useEffect(() => {
         // Update document title
-        document.title = `مواقيت الصلاة في ${city} | Prayer Times`;
+        document.title = `أوقات الصلاة في ${city} `;
 
         // Define meta tags
         const metaTags = [
-            { name: 'description', content: `مواقيت الصلاة في ${city} - اوقات الصلاة اليوم والايام القادمة، الفجر، الظهر، العصر، المغرب، العشاء` },
-            { name: 'keywords', content: 'مواقيت الصلاة, prayer times, أوقات الصلاة, الفجر, الظهر, العصر, المغرب, العشاء, salah times, islamic prayer' },
-            { property: 'og:title', content: `مواقيت الصلاة في ${city}` },
-            { property: 'og:description', content: `مواقيت الصلاة في ${city} - اوقات الصلاة اليوم والايام القادمة` },
+            { name: 'description', content: `أوقات الصلاة في ${city} - مواعيد الصلاة،اوقات الصلاة اليوم والايام القادمة، الفجر، الظهر، العصر، المغرب، العشاء` },
+            { name: 'keywords', content: 'أوقات الصلاة,  أوقات الصلاة, الفجر, الظهر, العصر, المغرب, العشاء, salah times, islamic prayer,مواعيد الصلاة' },
+            { property: 'og:title', content: `أوقات الصلاة في ${city}` },
+            { property: 'og:description', content: `أوقات الصلاة في ${city} - اوقات الصلاة اليوم والايام القادمة` },
             { property: 'og:type', content: 'website' },
             { name: 'twitter:card', content: 'summary' },
-            { name: 'twitter:title', content: `مواقيت الصلاة في ${city}` },
-            { name: 'twitter:description', content: `مواقيت الصلاة في ${city} - اوقات الصلاة اليوم والايام القادمة` },
+            { name: 'twitter:title', content: `أوقات الصلاة في ${city}` },
+            { name: 'twitter:description', content: `أوقات الصلاة في ${city} - اوقات الصلاة اليوم والايام القادمة` },
             { name: 'robots', content: 'index, follow' },
             { name: 'language', content: 'Arabic' },
             { name: 'author', content: ' دار الإتقان' },
@@ -54,18 +58,18 @@ const IslamicPrayerTimes = () => {
         const schema = {
             "@context": "https://schema.org",
             "@type": "WebPage",
-            "name": `مواقيت الصلاة في ${city}`,
-            "description": `مواقيت الصلاة في ${city} - اوقات الصلاة اليوم والايام القادمة`,
+            "name": `أوقات الصلاة في ${city}`,
+            "description": `أوقات الصلاة في ${city} - اوقات الصلاة اليوم والايام القادمة`,
             "inLanguage": "ar",
             "isPartOf": {
                 "@type": "WebSite",
-                "name": "مسجد التقوى",
+                "name": " دار الإتقان",
                 "url": window.location.origin
             },
             "mainEntity": {
                 "@type": "Thing",
-                "name": `مواقيت الصلاة في ${city}`,
-                "description": `جدول مواقيت الصلاة اليومي في ${city}`
+                "name": `أوقات الصلاة في ${city}`,
+                "description": `جدول أوقات الصلاة اليومي في ${city}`
             }
         };
 
@@ -91,7 +95,7 @@ const IslamicPrayerTimes = () => {
         };
     }, [city]); // Re-run when city changes
 
-   
+
     const prayerNamesArabic = {
         Fajr: 'الفجر',
         Sunrise: 'الشروق',
@@ -303,20 +307,45 @@ const IslamicPrayerTimes = () => {
             const month = today.getMonth() + 1;
             const day = today.getDate();
             const timezoneString = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            // Fetch current month
             const url = `https://api.aladhan.com/v1/calendar?latitude=${location.latitude}&longitude=${location.longitude}&method=${calculationMethod}&month=${month}&year=${year}&timezone=${timezoneString}`;
             const response = await fetch(url);
             const data = await response.json();
+            let calendar = [];
             if (data.code === 200) {
-                const calendar = data.data.slice(day - 1, day - 1 + 20); // Show 20 days
+                // If less than 30 days left in the month, fetch next month as well
+                const daysLeftThisMonth = data.data.length - (day - 1);
+                if (daysLeftThisMonth < 30) {
+                    // Fetch next month
+                    let nextMonth = month + 1;
+                    let nextYear = year;
+                    if (nextMonth > 12) {
+                        nextMonth = 1;
+                        nextYear++;
+                    }
+                    const nextMonthUrl = `https://api.aladhan.com/v1/calendar?latitude=${location.latitude}&longitude=${location.longitude}&method=${calculationMethod}&month=${nextMonth}&year=${nextYear}&timezone=${timezoneString}`;
+                    const nextMonthResponse = await fetch(nextMonthUrl);
+                    const nextMonthData = await nextMonthResponse.json();
+                    if (nextMonthData.code === 200) {
+                        calendar = [
+                            ...data.data.slice(day - 1),
+                            ...nextMonthData.data.slice(0, 30 - daysLeftThisMonth)
+                        ];
+                    } else {
+                        calendar = data.data.slice(day - 1);
+                    }
+                } else {
+                    calendar = data.data.slice(day - 1, day - 1 + 30);
+                }
                 setPrayerCalendar(calendar);
                 setSelectedDayIdx(0);
                 setError(null);
             } else {
-                setError('تعذر جلب مواقيت الصلاة.');
+                setError('تعذر جلب أوقات الصلاة.');
             }
             setLoading(false);
         } catch {
-            setError('تعذر جلب مواقيت الصلاة.');
+            setError('تعذر جلب أوقات الصلاة.');
             setLoading(false);
         }
     };
@@ -326,7 +355,7 @@ const IslamicPrayerTimes = () => {
             <div className="min-h-screen  flex items-center justify-center">
                 <div className="text-center bg-white rounded-3xl p-8 shadow-2xl">
                     <Loader2 className="w-12 h-12 animate-spin text-emerald-600 mx-auto mb-4" />
-                    <p className="text-gray-700 text-lg font-medium">جاري تحميل مواقيت الصلاة...</p>
+                    <p className="text-gray-700 text-lg font-medium">جاري تحميل أوقات الصلاة...</p>
                 </div>
             </div>
         );
@@ -337,7 +366,7 @@ const IslamicPrayerTimes = () => {
             <div className="max-w-6xl mx-auto px-4 py-8">
                 {/* Header */}
                 <header className="text-center mb-8">
-                    <h1 className="text-4xl font-bold text-emerald-800 dark:text-yellow-400 mb-2" itemProp="headline">مواقيت الصلاة</h1>
+                    <h1 className="text-4xl font-bold text-emerald-800 dark:text-yellow-400 mb-2" itemProp="headline">أوقات الصلاة</h1>
                     <div className="flex items-center justify-center text-emerald-700 dark:text-yellow-400 text-lg">
                         <MapPin className="w-5 h-5 ml-2" aria-hidden="true" />
                         <span itemProp="contentLocation">{city}</span>
@@ -370,17 +399,18 @@ const IslamicPrayerTimes = () => {
                     </div>
                 )}
 
+                {/* PDF Download Button - well designed, outside the table */}
+                <DownloadPrayerTimesPDF prayerCalendar={prayerCalendar} prayerNamesArabic={prayerNamesArabic} />
                 {/* Main Content Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8 items-stretch">
-
-                    {/* Right Side - 10 Days Calendar */}
-                    <div className="order-1 lg:order-2 lg:col-span-2">
-                        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-emerald-200 dark:border-yellow-700 overflow-hidden max-w-5xl mx-auto w-full">
-                            <div className="p-6">
+                    {/* Right Side - 15 Days Calendar */}
+                    <div className="order-1 lg:order-2 lg:col-span-2 flex flex-col h-full">
+                        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-emerald-200 dark:border-yellow-700 overflow-hidden max-w-5xl mx-auto w-full h-full flex flex-col">
+                            <div className="p-6 flex-1 flex flex-col">
                                 <h3 className="text-2xl font-bold text-emerald-800 text-center mb-6">
-                                    مواقيت الصلاة لخمسة عشر يوماً
+                                    أوقات الصلاة لخمسة عشر يوماً (من اليوم)
                                 </h3>
-                                <div className="overflow-x-auto">
+                                <div className="overflow-x-auto flex-1">
                                     <table className="w-full">
                                         <thead>
                                             <tr className="bg-emerald-600 dark:bg-yellow-500 text-white">
@@ -396,7 +426,8 @@ const IslamicPrayerTimes = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {prayerCalendar.map((item, idx) => (
+                                            {/* Always show 15 days: current + next 14 */}
+                                            {prayerCalendar.slice(0, 15).map((item, idx) => (
                                                 <tr
                                                     key={idx}
                                                     className={`text-center cursor-pointer transition-all duration-200 ${idx === selectedDayIdx
@@ -405,7 +436,6 @@ const IslamicPrayerTimes = () => {
                                                         }`}
                                                     onClick={() => setSelectedDayIdx(idx)}
                                                 >
-
                                                     <td className="py-4 px-3 border-b border-emerald-100 dark:border-yellow-900">
                                                         {item.date.hijri.day} {item.date.hijri.month.ar} {item.date.hijri.year}
                                                     </td>
@@ -423,10 +453,10 @@ const IslamicPrayerTimes = () => {
                         </div>
                     </div>
                     {/* Left Side - Current Time, Next Prayer, and Today's Prayers */}
-                    <div className="order-2 lg:order-1 lg:col-span-1 flex flex-col gap-8">
+                    <div className="order-2 lg:order-1 lg:col-span-1 flex flex-col justify-between h-full">
                         {/* Current Time */}
-                        <div className="flex-none">
-                            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-2xl border border-emerald-200 dark:border-yellow-700 max-w-xs mx-auto flex flex-col justify-center">
+                        <div className="flex-1 flex flex-col justify-center mt-4">
+                            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-2xl border border-emerald-200 dark:border-yellow-700 max-w-sm mx-4 flex flex-col justify-center h-full">
                                 <div className="text-center">
                                     <div className="text-4xl mb-2"><Clock className="w-8 h-8 text-emerald-600 dark:text-yellow-400 mx-auto" /></div>
                                     <h2 className="text-xl font-bold text-emerald-800 dark:text-yellow-400 mb-2">الوقت الحالي</h2>
@@ -442,8 +472,8 @@ const IslamicPrayerTimes = () => {
                         </div>
                         {/* Next Prayer */}
                         {nextPrayer && (
-                            <div className="flex-none">
-                                <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-2xl border border-emerald-200 dark:border-yellow-700 max-w-xs mx-auto flex flex-col justify-center">
+                            <div className="flex-1 flex flex-col justify-center my-4">
+                                <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-2xl border border-emerald-200 dark:border-yellow-700 max-w-sm mx-4 flex flex-col justify-center h-full">
                                     <div className="text-center">
                                         <div className="text-4xl mb-2 text-emerald-600 dark:text-yellow-400">{nextPrayer.icon}</div>
                                         <h2 className="text-xl font-bold text-emerald-800 dark:text-yellow-400 mb-2">
@@ -462,13 +492,13 @@ const IslamicPrayerTimes = () => {
                         )}
                         {/* Today's Prayers */}
                         {prayerCalendar[selectedDayIdx] && (
-                            <div className="flex-none">
-                                <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-2xl border border-emerald-200 dark:border-yellow-700 max-w-xs mx-auto">
+                            <div className="flex-1 flex flex-col justify-center mb-4">
+                                <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-2xl border border-emerald-200 dark:border-yellow-700 max-w-sm mx-4 h-full">
                                     <div className="text-center mb-4">
                                         <div className="flex items-center justify-center gap-2 mb-2">
                                             <Calendar className="w-6 h-6 text-emerald-600 dark:text-yellow-400" />
                                             <h2 className="text-xl font-bold text-emerald-800 dark:text-yellow-400">
-                                                مواقيت اليوم
+                                                أوقات الصلاة اليوم
                                             </h2>
                                         </div>
                                         <div className="text-emerald-700 dark:text-yellow-400 text-sm">

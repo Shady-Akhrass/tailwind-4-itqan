@@ -63,7 +63,7 @@ const Navbar = () => {
         },
         {
             icon: <FaClock className="text-xl" />,
-            label: 'مواقيت الصلاة',
+            label: 'أوقات الصلاة',
             link: '/prayer-times',
             id: 'prayer-times'
         },

@@ -235,11 +235,11 @@ const IslamicPrayerTimes = () => {
                 setSelectedDayIdx(0);
                 setError(null);
             } else {
-                setError('تعذر جلب مواقيت الصلاة.');
+                setError('تعذر جلب أوقات الصلاة.');
             }
             setLoading(false);
         } catch {
-            setError('تعذر جلب مواقيت الصلاة.');
+            setError('تعذر جلب أوقات الصلاة.');
             setLoading(false);
         }
     };
@@ -249,7 +249,7 @@ const IslamicPrayerTimes = () => {
             <div className="min-h-screen  flex items-center justify-center">
                 <div className="text-center bg-white rounded-3xl p-8 shadow-2xl">
                     <Loader2 className="w-12 h-12 animate-spin text-emerald-600 dark:text-yellow-400 mx-auto mb-4" />
-                    <p className="text-gray-700 text-lg font-medium">جاري تحميل مواقيت الصلاة...</p>
+                    <p className="text-gray-700 text-lg font-medium">جاري تحميل أوقات الصلاة...</p>
                 </div>
             </div>
         );
@@ -272,7 +272,7 @@ const IslamicPrayerTimes = () => {
     const prayerTimesSchema = {
         "@context": "https://schema.org",
         "@type": "Event",
-        "name": `مواقيت الصلاة في ${city}`,
+        "name": `أوقات الصلاة في ${city}`,
         "startDate": prayerCalendar[selectedDayIdx]?.date.gregorian.date,
         "location": {
             "@type": "Place",
@@ -291,9 +291,9 @@ const IslamicPrayerTimes = () => {
             {/* Using semantic HTML elements for better SEO */}
             <article itemScope itemType="https://schema.org/Event" className="max-w-6xl mx-auto px-4 py-8">
                 {/* Hidden SEO-friendly metadata */}
-                <meta itemProp="name" content={`مواقيت الصلاة في ${city}`} />
+                <meta itemProp="name" content={`أوقات الصلاة في ${city}`} />
                 <meta itemProp="startDate" content={prayerCalendar[selectedDayIdx]?.date.gregorian.date} />
-                <meta itemProp="description" content={`مواقيت الصلاة اليوم في ${city}. الصلاة القادمة: ${nextPrayer?.arabicName || ''} في ${nextPrayer?.time || ''}`} />
+                <meta itemProp="description" content={`أوقات الصلاة اليوم في ${city}. الصلاة القادمة: ${nextPrayer?.arabicName || ''} في ${nextPrayer?.time || ''}`} />
                 <div itemProp="location" itemScope itemType="https://schema.org/Place">
                     <meta itemProp="name" content={city} />
                     <div itemProp="address" itemScope itemType="https://schema.org/PostalAddress">
@@ -305,7 +305,7 @@ const IslamicPrayerTimes = () => {
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-600 dark:bg-yellow-500 rounded-full mb-4">
                         <Bell className="w-8 h-8 text-white" />
                     </div>
-                    <h1 className="text-4xl font-bold text-emerald-800 dark:text-yellow-400 mb-2">مواقيت الصلاة</h1>
+                    <h1 className="text-4xl font-bold text-emerald-800 dark:text-yellow-400 mb-2">أوقات الصلاة</h1>
                     <div className="flex items-center justify-center text-emerald-700 dark:text-yellow-400 text-lg">
                         <MapPin className="w-5 h-5 ml-2" />
                         <span>{city}</span>
