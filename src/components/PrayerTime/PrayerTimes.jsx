@@ -18,83 +18,62 @@ const IslamicPrayerTimes = () => {
     const [nextPrayer, setNextPrayer] = useState(null);
     const [timeToNext, setTimeToNext] = useState('');
 
-    // ...removed old PDF logic, now using DownloadPrayerTimesPDF component...
 
-    // SEO Meta Tags Effect
+    // SEO Optimization
     useEffect(() => {
         // Update document title
-        document.title = `أوقات الصلاة في ${city} `;
+        const title = `مواقيت الصلاة في ${city} - ${nextPrayer?.arabicName || 'أوقات الصلاة اليومية'}`;
+        document.title = title;
 
-        // Define meta tags
-        const metaTags = [
-            { name: 'description', content: `أوقات الصلاة في ${city} - مواعيد الصلاة،اوقات الصلاة اليوم والايام القادمة، الفجر، الظهر، العصر، المغرب، العشاء` },
-            { name: 'keywords', content: 'أوقات الصلاة,  أوقات الصلاة, الفجر, الظهر, العصر, المغرب, العشاء, salah times, islamic prayer,مواعيد الصلاة' },
-            { property: 'og:title', content: `أوقات الصلاة في ${city}` },
-            { property: 'og:description', content: `أوقات الصلاة في ${city} - اوقات الصلاة اليوم والايام القادمة` },
-            { property: 'og:type', content: 'website' },
-            { name: 'twitter:card', content: 'summary' },
-            { name: 'twitter:title', content: `أوقات الصلاة في ${city}` },
-            { name: 'twitter:description', content: `أوقات الصلاة في ${city} - اوقات الصلاة اليوم والايام القادمة` },
-            { name: 'robots', content: 'index, follow' },
-            { name: 'language', content: 'Arabic' },
-            { name: 'author', content: ' دار الإتقان' },
-            { property: 'og:locale', content: 'ar' },
-            { property: 'og:site_name', content: 'دار الإتقان' }
-        ];
-
-        // Update or create meta tags
-        metaTags.forEach(({ name, property, content }) => {
-            let meta = document.querySelector(`meta[${name ? `name="${name}"` : `property="${property}"`}]`);
-            if (!meta) {
-                meta = document.createElement('meta');
-                if (name) meta.name = name;
-                if (property) meta.setAttribute('property', property);
-                document.head.appendChild(meta);
-            }
-            meta.content = content;
-        });
-
-        // Schema.org structured data
-        const schema = {
-            "@context": "https://schema.org",
-            "@type": "WebPage",
-            "name": `أوقات الصلاة في ${city}`,
-            "description": `أوقات الصلاة في ${city} - اوقات الصلاة اليوم والايام القادمة`,
-            "inLanguage": "ar",
-            "isPartOf": {
-                "@type": "WebSite",
-                "name": " دار الإتقان",
-                "url": window.location.origin
-            },
-            "mainEntity": {
-                "@type": "Thing",
-                "name": `أوقات الصلاة في ${city}`,
-                "description": `جدول أوقات الصلاة اليومي في ${city}`
-            }
-        };
-
-        // Add schema.org script
-        let scriptTag = document.querySelector('#prayer-times-schema');
-        if (!scriptTag) {
-            scriptTag = document.createElement('script');
-            scriptTag.id = 'prayer-times-schema';
-            scriptTag.type = 'application/ld+json';
-            document.head.appendChild(scriptTag);
+        // Update meta description
+        let metaDescription = document.querySelector('meta[name="description"]');
+        if (!metaDescription) {
+            metaDescription = document.createElement('meta');
+            metaDescription.name = 'description';
+            document.head.appendChild(metaDescription);
         }
-        scriptTag.innerHTML = JSON.stringify(schema);
+        metaDescription.content = `مواعيد الصلاة في ${city} - ${nextPrayer ? `الصلاة القادمة: ${nextPrayer.arabicName} الساعة ${nextPrayer.time}` : 'عرض مواقيت الصلاة اليومية حسب الموقع الجغرافي'}`;
 
-        // Cleanup function
-        return () => {
-            metaTags.forEach(({ name, property }) => {
-                const selector = `meta[${name ? `name="${name}"` : `property="${property}"`}]`;
-                const meta = document.querySelector(selector);
-                if (meta) meta.remove();
-            });
-            const schemaScript = document.querySelector('#prayer-times-schema');
-            if (schemaScript) schemaScript.remove();
+        // Update canonical URL
+        let canonicalLink = document.querySelector('link[rel="canonical"]');
+        if (!canonicalLink) {
+            canonicalLink = document.createElement('link');
+            canonicalLink.rel = 'canonical';
+            document.head.appendChild(canonicalLink);
+        }
+        canonicalLink.href = window.location.href.split('?')[0];
+
+        // Structured data for rich results
+        const structuredData = {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": `مواقيت الصلاة في ${city}`,
+            "description": `عرض مواقيت الصلاة اليومية في ${city} حسب الموقع الجغرافي`,
+            "applicationCategory": "IslamicApplication",
+            "operatingSystem": "Web",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+            }
         };
-    }, [city]); // Re-run when city changes
 
+        let script = document.querySelector('#structured-data');
+        if (!script) {
+            script = document.createElement('script');
+            script.type = 'application/ld+json';
+            script.id = 'structured-data';
+            document.head.appendChild(script);
+        }
+        script.text = JSON.stringify(structuredData);
+
+        return () => {
+            // Clean up meta tags when component unmounts
+            if (metaDescription) metaDescription.remove();
+            if (canonicalLink) canonicalLink.remove();
+            if (script) script.remove();
+        };
+    }, [city, nextPrayer]);
 
     const prayerNamesArabic = {
         Fajr: 'الفجر',

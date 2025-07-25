@@ -20,20 +20,20 @@ Font.register({
 const styles = StyleSheet.create({
     page: {
         flexDirection: 'column',
-        backgroundColor: '#F0FDF4', // emerald-50 equivalent
-        padding: 10,
+        backgroundColor: '#F0FDF4',
+        padding: 8, // Reduced padding
         fontFamily: 'Tajawal',
     },
     headerContainer: {
-        flexDirection: 'row-reverse', // RTL direction
+        flexDirection: 'row-reverse',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 2,
-        padding: 2,
-        backgroundColor: '#D1FAE5', // light yellow-green background
+        marginBottom: 6,
+        padding: 6,
+        backgroundColor: '#D1FAE5',
         borderRadius: 5,
         borderWidth: 1,
-        borderColor: '#65A30D', // lime-600
+        borderColor: '#65A30D',
     },
     headerLeft: {
         flex: 1,
@@ -48,36 +48,36 @@ const styles = StyleSheet.create({
         alignItems: 'flex-end',
     },
     logo: {
-        width: 120,
-        height: 80,
+        width: 100, // Reduced size
+        height: 65,
         objectFit: 'contain',
         marginRight: -8,
     },
     headerTitle: {
-        color: '#065F46', // emerald-800
-        fontSize: 16,
+        color: '#065F46',
+        fontSize: 14, // Reduced font size
         fontWeight: 'bold',
         fontFamily: 'Tajawal',
         marginBottom: 2,
         textAlign: 'center',
     },
     subHeaderText: {
-        color: '#065F46', // emerald-800
-        fontSize: 10,
+        color: '#065F46',
+        fontSize: 9, // Reduced font size
         fontFamily: 'Tajawal',
         textAlign: 'center',
     },
     brandText: {
         marginTop: 4,
-        color: '#065F46', // emerald-800
-        fontSize: 16,
+        color: '#065F46',
+        fontSize: 14, // Reduced font size
         fontFamily: 'Tajawal',
         fontWeight: 'bold',
         textAlign: 'right',
     },
     yearText: {
-        color: '#065F46', // emerald-800
-        fontSize: 9,
+        color: '#065F46',
+        fontSize: 8, // Reduced font size
         fontFamily: 'Tajawal',
         textAlign: 'center',
         marginTop: 2,
@@ -87,66 +87,92 @@ const styles = StyleSheet.create({
         width: 'auto',
         borderStyle: 'solid',
         borderWidth: 1,
-        borderColor: '#059669', // emerald-600
-        marginTop: 5,
+        borderColor: '#059669',
+        marginTop: 6,
         borderRadius: 4,
         overflow: 'hidden',
-        direction: 'rtl', // RTL direction for table
+        direction: 'rtl',
     },
     tableRow: {
-        flexDirection: 'row-reverse', // RTL direction
+        flexDirection: 'row-reverse',
+        minHeight: 'auto', // Allow dynamic height
     },
     tableHeader: {
-        backgroundColor: '#059669', // emerald-600
+        backgroundColor: '#059669',
     },
     headerCell: {
         flex: 1,
-        padding: 8, // Increased from 2 to 8
-        borderWidth: 1,
-        borderColor: '#A7F3D0', // emerald-200
+        padding: '6 3', // Optimized padding
+        borderWidth: 0.5, // Thinner borders
+        borderColor: '#A7F3D0',
         textAlign: 'center',
-        fontSize: 13, // Increased from 12 to 14
+        fontSize: 12, // Smaller font
         fontFamily: 'Tajawal',
         fontWeight: 'bold',
         color: '#FFFFFF',
-        minHeight: 35, // Increased from 18 to 35
+        minHeight: 25, // Reduced height
         justifyContent: 'center',
+        alignItems: 'center',
     },
     tableCell: {
         flex: 1,
-        padding: 0, // Increased from 1.5 to 6
-        borderWidth: 1,
-        borderColor: '#A7F3D0', // emerald-200
+        padding: '4 1', // Minimal padding
+        borderWidth: 0.5, // Thinner borders
+        borderColor: '#A7F3D0',
         textAlign: 'center',
-        fontSize: 12, // Increased from 11 to 13
+        fontSize: 11.5, // Smaller font for better fit
         fontFamily: 'Tajawal',
         fontWeight: 'normal',
-        minHeight: 22, // Increased from 15 to 30
+        minHeight: 18, // Reduced height
         justifyContent: 'center',
+        alignItems: 'center',
+        wordWrap: 'break-word',
+    },
+    // Specific column widths for better content fitting
+    dayColumn: {
+        flex: 0.7, // Narrower for day names
+        padding: '4 1',
+        fontSize: 9,
+    },
+    gregorianDateColumn: {
+        flex: 1.1, // Medium width for Gregorian dates
+        padding: '4 2',
+        fontSize: 9,
+    },
+    hijriDateColumn: {
+        flex: 1.1, // Medium width for Hijri dates
+        padding: '4 2',
+        fontSize: 9,
+    },
+    prayerTimeColumn: {
+        flex: 0.8, // Compact for prayer times
+        padding: '4 1',
+        fontSize: 9.5,
+        fontWeight: 'bold', // Make prayer times stand out
     },
     oddRow: {
-        backgroundColor: '#F0FDF4', // emerald-50
+        backgroundColor: '#F0FDF4',
     },
     evenRow: {
-        backgroundColor: '#D1FAE5', // emerald-100
+        backgroundColor: '#D1FAE5',
     },
     watermark: {
         position: 'absolute',
         top: '50%',
         left: '50%',
-        color: '#059669', // emerald-600
-        fontSize: 40,
+        color: '#059669',
+        fontSize: 35, // Slightly smaller
         opacity: 0.03,
         transform: 'translate(-50%, -50%) rotate(-45deg)',
         zIndex: -1,
     },
     footer: {
-        marginTop: 8,
+        marginTop: 6,
         alignItems: 'center',
     },
     footerText: {
-        fontSize: 7,
-        color: '#065F46', // emerald-800
+        fontSize: 6, // Smaller footer text
+        color: '#065F46',
         textAlign: 'center',
         fontFamily: 'Tajawal',
     },
